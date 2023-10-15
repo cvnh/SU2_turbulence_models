@@ -34,7 +34,16 @@ You will find more information and the latest news in:
 - Twitter: <https://twitter.com/su2code>
 - Facebook: <https://www.facebook.com/su2code>
 
-#Test
+# About this fork
+
+The goals are as follows:
+
+- Expand the selection of turbulence models
+- Facilitate the creation of new turbulence models
+
+Models and validation cases will be based on NASA resources:
+
+<https://turbmodels.larc.nasa.gov/>
 
 
 # SU2 Installation
