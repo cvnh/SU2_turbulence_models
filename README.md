@@ -70,6 +70,9 @@ Models and validation cases to be based on NASA Turbulence Model resources:
 
 Work in progress
 
+## Issues 
 
+1. Correct categorisation of turbulent model families
+Is this really relevant? Also, overlap between turbulence and transition models. 
 
 
