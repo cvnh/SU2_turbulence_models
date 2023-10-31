@@ -36,7 +36,8 @@ You will find more information and the latest news in:
 
 # About this fork
 
-## Main goals are:
+## Goals
+Main goals are:
 
 - Expand the selection of turbulence models
 - Facilitate the creation of new turbulence models
@@ -45,25 +46,25 @@ Models and validation cases to be based on NASA Turbulence Model resources:
 
 <https://turbmodels.larc.nasa.gov/>
 
-Organisational:
+## Organisational
 
 1     Background work
-1.1   Code change to accept new models
-1.2   Implementation of dummy and development models 
-1.3   Validation cases 
-1.4   Automation of validation cases (Orbit?)
+- 1.1   Code change to accept new models
+- 1.2   Implementation of dummy and development models 
+- 1.3   Validation cases 
+- 1.4   Automation of validation cases (Orbit?)
 
 2 - One equation models
-2.1: new models
-2.2: Variants of existing models
+- 2.1: new models
+- 2.2: Variants of existing models
 
 3 - One equation models
-3.1: new models
-3.2: Variants of existing models
+- 3.1: new models
+- 3.2: Variants of existing models
 
 4 - Three equation models
-4.1: new models
-4.2: Variants of existing models
+- 4.1: new models
+- 4.2: Variants of existing models
 
 ## Validation cases / validation matrix
 
