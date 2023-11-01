@@ -54,17 +54,9 @@ Models and validation cases to be based on NASA Turbulence Model resources:
 - 1.3   Validation cases 
 - 1.4   Automation of validation cases (Orbit?)
 
-2 - One equation models
-- 2.1: new models
-- 2.2: Variants of existing models
+## Details
 
-3 - One equation models
-- 3.1: new models
-- 3.2: Variants of existing models
-
-4 - Three equation models
-- 4.1: new models
-- 4.2: Variants of existing models
+Refer to Doxygen module Solving the turbulence model equations
 
 ## Validation cases / validation matrix
 
@@ -74,8 +66,11 @@ Work in progress
 
 1. Correct categorisation of turbulent model families
 
-    Is this really relevant? Also, overlap between turbulence and transition models (trans_sources.hpp), and is used in the adjoint solver (CAdjFlowOutput.cpp). Would be easy to enable only the existing models to the adjoint. 
+    Is this really relevant? Also, overlap between turbulence and transition models (trans_sources.hpp) and the adjoint solver (CAdjFlowOutput.cpp). Would be easy to enable only the existing models to the adjoint. 
 
     Need to create a list of properties and check if all properties can be categorised in an unique way. 
 
+2. Code partitioning
+
+   Suggest to partition code like option_structure.hpp into smaller files. Turb model options will exceed 1k lines.
 
