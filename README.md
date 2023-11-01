@@ -74,6 +74,8 @@ Work in progress
 
 1. Correct categorisation of turbulent model families
 
-    Is this really relevant? Also, overlap between turbulence and transition models. 
+    Is this really relevant? Also, overlap between turbulence and transition models (trans_sources.hpp), and is used in the adjoint solver (CAdjFlowOutput.cpp). Would be easy to enable only the existing models to the adjoint. 
+
+    Need to create a list of properties and check if all properties can be categorised in an unique way. 
 
 
