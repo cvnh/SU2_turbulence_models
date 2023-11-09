@@ -945,13 +945,33 @@ static const MapType<std::string, LIMITER> Limiter_Map = {
  */
 enum class TURB_MODEL {
   NONE,      /*!< \brief No turbulence model. */
-  SA,        /*!< \brief Kind of Turbulent model (Spalart-Allmaras). */
-  SST,       /*!< \brief Kind of Turbulence model (Menter SST). */
+  BSL,       /*!< \brief Kind of turbulence model (Menter BST).*/
+  CKE,       /*!< \brief Kind of turbulence model (Chien k-epsilon).*/
+  KERT,      /*!< \brief Kind of turbulence model (k-epsilon Rt).*/
+  KEZF,      /*!< \brief Kind of turbulence model (k-epsilon k-epsilon-zeta-f).*/
+  KKL,       /*!< \brief Kind of turbulence model (k-kL).*/
+  NUT92,     /*!< \brief Kind of Turbulence Model (Sekundov Nut-92).*/
+  SA,        /*!< \brief Kind of Turbulence Model (Spalart-Allmaras). */
+  SST,       /*!< \brief Kind of Turbulence Model (Menter SST). */
+  WA,        /*!< \brief Kind of Turbulence Model (Wray-Agarwal).*/
+  WKW,       /*!< \brief Kind of Turbulence Model (Wilcox k-omega).*/
+  TURBDEV,   /*!< \brief Kind of Turbulence Model (Development)*/
+  DUMMYTURB  /*!< \brief Kind of Turbulence Model (Dummy model - no turbulence)*/
 };
 static const MapType<std::string, TURB_MODEL> Turb_Model_Map = {
   MakePair("NONE", TURB_MODEL::NONE)
+  MakePair("BSL", TURB_MODEL::BSL)
+  MakePair("CKE", TURB_MODEL::CKE)
+  MakePair("KERT", TURB_MODEL::KERT)
+  MakePair("KEZF", TURB_MODEL::KEZF)
+  MakePair("KKL", TURB_MODEL::KKL)
+  MakePair("NUT_92", TURB_MODEL::NUT92)
   MakePair("SA", TURB_MODEL::SA)
   MakePair("SST", TURB_MODEL::SST)
+  MakePair("WA", TURB_MODEL::WA)
+  MakePair("WKW", TURB_MODEL::WKW)
+  MakePair("DEV", TURB_MODEL::TURBDEV)
+  MakePair("DUMMYTURB", TURB_MODEL::DUMMYTURB)
 };
 
 /*!
@@ -959,9 +979,16 @@ static const MapType<std::string, TURB_MODEL> Turb_Model_Map = {
  */
 enum class TURB_FAMILY {
   NONE,   /*!< \brief No turbulence model. */
-  SA,     /*!< \brief Spalart-Allmaras variants. */
-  KW,     /*!< \brief k-w models. */
+  TURBDEV,/*!< \brief development turbulence model <- for testing and debug only!*/
+  DUMMYTURB, /*!< \brief developpment (no) turbulence model <- for testing and debug only!*/
+  NUT92,  /*!< \brief Nu tau 92 models. */
+  SA,     /*!< \brief Spalart-Allmaras models. */
+  KKL,    /*!< \brief K-KL models. */
+  //WA,     /*!< \brief Wray-Agarwal models. */       // -> WA is a k-omega model?
+  KW,     /*!< \brief k-omega models. */
+  KE,     /*!< \brief k-epsilon models.*/
 };
+
 /*!
  * \brief Associate turb models with their family
  */
@@ -969,142 +996,152 @@ inline TURB_FAMILY TurbModelFamily(TURB_MODEL model) {
   switch (model) {
     case TURB_MODEL::NONE:
       return TURB_FAMILY::NONE;
+    case TURB_MODEL::NUT92:
+      return TURB_FAMILY::NUT92;
     case TURB_MODEL::SA:
       return TURB_FAMILY::SA;
+    case TURB_MODEL::WA:
+      return TURB_FAMILY::KW;      
+    case TURB_MODEL::BSL:
+      return TURB_FAMILY::KW;    
+    case TURB_MODEL::CKE:
+      return TURB_FAMILY::KE;
+    case TURB_MODEL::KKL:
+      return TURB_FAMILY::KKL;      
     case TURB_MODEL::SST:
       return TURB_FAMILY::KW;
+    case TURB_MODEL::KERT:
+      return TURB_FAMILY::KE;
+    case TURB_MODEL::KEZF:
+      return TURB_FAMILY::KE;      
+    case TURB_MODEL::DUMMYTURB:
+      return TURB_FAMILY::DUMMYTURB;
+    case TURB_MODEL::TURBDEV:
+      return TURB_FAMILY::TURBDEV;
   }
   return TURB_FAMILY::NONE;
 }
 
+
 /*!
- * \brief SST Options
+ * \brief nuT-92 Options
  */
-enum class SST_OPTIONS {
-  NONE,        /*!< \brief No SST Turb model. */
-  V1994,       /*!< \brief 1994 Menter k-w SST model. */
-  V2003,       /*!< \brief 2003 Menter k-w SST model. */
-  V1994m,      /*!< \brief 1994m Menter k-w SST model. */
-  V2003m,      /*!< \brief 2003m Menter k-w SST model. */
-  SUST,        /*!< \brief Menter k-w SST model with sustaining terms. */
-  V,           /*!< \brief Menter k-w SST model with vorticity production terms. */
-  KL,          /*!< \brief Menter k-w SST model with Kato-Launder production terms. */
-  UQ,          /*!< \brief Menter k-w SST model with uncertainty quantification modifications. */
+enum class NUT92_OPTIONS {
+    NONE,     /*!< \brief No option / default. */
+    NUT92,    /*!< \brief Standard Nut-92.*/
+    NUT92FD,       /*!< \brief Nut-92-FD variant.*/
 };
-static const MapType<std::string, SST_OPTIONS> SST_Options_Map = {
-  MakePair("NONE", SST_OPTIONS::NONE)
-  MakePair("V1994m", SST_OPTIONS::V1994m)
-  MakePair("V2003m", SST_OPTIONS::V2003m)
-  /// TODO: For now we do not support "unmodified" versions of SST.
-  //MakePair("V1994", SST_OPTIONS::V1994)
-  //MakePair("V2003", SST_OPTIONS::V2003)
-  MakePair("SUSTAINING", SST_OPTIONS::SUST)
-  MakePair("VORTICITY", SST_OPTIONS::V)
-  MakePair("KATO-LAUNDER", SST_OPTIONS::KL)
-  MakePair("UQ", SST_OPTIONS::UQ)
+static const MapType<std::string, NUT92_OPTIONS> NUT92_Options_Map = {
+  MakePair("NONE", NUT92_OPTIONS::NONE)
+  MakePair("NUT-92", NUT92_OPTIONS::NUT92)
+  MakePair("NUT-92-FD", NUT92_OPTIONS::NUT92FD)
 };
 
 /*!
- * \brief Structure containing parsed SST options.
+ * \brief Structure containing parsed nuT-92 options.
  */
-struct SST_ParsedOptions {
-  SST_OPTIONS version = SST_OPTIONS::V1994;   /*!< \brief Enum SST base model. */
-  SST_OPTIONS production = SST_OPTIONS::NONE; /*!< \brief Enum for production corrections/modifiers for SST model. */
-  bool sust = false;                          /*!< \brief Bool for SST model with sustaining terms. */
-  bool uq = false;                            /*!< \brief Bool for using uncertainty quantification. */
-  bool modified = false;                      /*!< \brief Bool for modified (m) SST model. */
+struct NUT92_ParsedOptions {
+  NUT92_OPTIONS version = NUT92_OPTIONS::NONE;  /*!< \brief nut-92 base model. */
 };
 
 /*!
- * \brief Function to parse SST options.
- * \param[in] SST_Options - Selected SST option from config.
- * \param[in] nSST_Options - Number of options selected.
+ * \brief Function to parse Nut-92 options.
+ * \param[in] NUT92_Options - Selected nuT-92 option from config.
+ * \param[in] nNUT92_Options - Number of options selected.
  * \param[in] rank - MPI rank.
- * \return Struct with SST options.
+ * \return Struct with nuT-92 options.
  */
-inline SST_ParsedOptions ParseSSTOptions(const SST_OPTIONS *SST_Options, unsigned short nSST_Options, int rank) {
-  SST_ParsedOptions SSTParsedOptions;
+inline NUT92_ParsedOptions ParseNUT92Options(const NUT92_OPTIONS *NUT92_Options, unsigned short nNUT92_Options, int rank) {
+  NUT92_ParsedOptions NUT92ParsedOptions;
 
-  auto IsPresent = [&](SST_OPTIONS option) {
-    const auto sst_options_end = SST_Options + nSST_Options;
-    return std::find(SST_Options, sst_options_end, option) != sst_options_end;
+  auto IsPresent = [&](NUT92_OPTIONS option) {
+    const auto nut92_options_end = NUT92_Options + nNUT92_Options;
+    return std::find(NUT92_Options, nut92_options_end, option) != nut92_options_end;
   };
 
-  const bool found_1994 = IsPresent(SST_OPTIONS::V1994);
-  const bool found_2003 = IsPresent(SST_OPTIONS::V2003);
-  const bool found_1994m = IsPresent(SST_OPTIONS::V1994m);
-  const bool found_2003m = IsPresent(SST_OPTIONS::V2003m);
+  const bool nut92    = IsPresent(NUT92_OPTIONS::NUT92);
+  const bool nut92fd  = IsPresent(NUT92_OPTIONS::NUT92FD);
 
-  const bool default_version = !found_1994 && !found_1994m && !found_2003 && !found_2003m;
+  //option validation
+  if ((int(nut92) + int(nut92fd)) > 1)
+    SU2_MPI::Error( "More than one model version selected for NUT92_OPTIONS. Please select only one  (NUT-92 or NUT-92-FD).\n"
+                    "See: https://turbmodels.larc.nasa.gov/nut92.html", CURRENT_FUNCTION); 
 
-  const bool sst_1994 = found_1994 || found_1994m;
-  /*--- Default version since v8. ---*/
-  const bool sst_2003 = found_2003 || found_2003m || default_version;
-
-  /*--- When V2003m or V1994m is selected, we automatically select sst_m. ---*/
-  const bool sst_m = found_1994m || found_2003m || default_version;
-
-  const bool sst_sust = IsPresent(SST_OPTIONS::SUST);
-  const bool sst_v = IsPresent(SST_OPTIONS::V);
-  const bool sst_kl = IsPresent(SST_OPTIONS::KL);
-  const bool sst_uq = IsPresent(SST_OPTIONS::UQ);
-
-  if (sst_1994 && sst_2003) {
-    SU2_MPI::Error("Two versions (1994 and 2003) selected for SST_OPTIONS. Please choose only one.", CURRENT_FUNCTION);
-  } else if (sst_2003) {
-    SSTParsedOptions.version = SST_OPTIONS::V2003;
-  } else {
-    SSTParsedOptions.version = SST_OPTIONS::V1994;
+  if ((int(nut92) + int(nut92fd)) == 0) 
+    NUT92ParsedOptions.version = NUT92_OPTIONS::NUT92;
+  else
+  {
+    if (nut92)
+      NUT92ParsedOptions.version = NUT92_OPTIONS::NUT92;
+    if (nut92fd)
+      NUT92ParsedOptions.version = NUT92_OPTIONS::NUT92FD;
   }
 
-  // Parse production modifications
-  if ((int(sst_v) + int(sst_kl) + int(sst_uq)) > 1) {
-    SU2_MPI::Error("Please select only one SST production term modifier (VORTICITY, KATO-LAUNDER, or UQ).", CURRENT_FUNCTION);
-  } else if (sst_v) {
-    SSTParsedOptions.production = SST_OPTIONS::V;
-  } else if (sst_kl) {
-    SSTParsedOptions.production = SST_OPTIONS::KL;
-  } else if (sst_uq) {
-    SSTParsedOptions.production = SST_OPTIONS::UQ;
-  }
+  //unavailable models
+  if (nut92)    SU2_MPI::Error("NUT-92 turbulence model not available", CURRENT_FUNCTION);
+  if (nut92fd)  SU2_MPI::Error("NUT-92 turbulence model not available", CURRENT_FUNCTION);
 
-  SSTParsedOptions.sust = sst_sust;
-  SSTParsedOptions.modified = sst_m;
-  SSTParsedOptions.uq = sst_uq;
-  return SSTParsedOptions;
+  return NUT92ParsedOptions;
 }
 
 /*!
  * \brief SA Options
  */
 enum class SA_OPTIONS {
-  NONE,     /*!< \brief No option / default. */
-  NEG,      /*!< \brief Negative SA. */
-  EDW,      /*!< \brief Edwards version. */
-  FT2,      /*!< \brief Use FT2 term. */
-  QCR2000,  /*!< \brief Quadratic constitutive relation. */
-  COMP,     /*!< \brief Compressibility correction. */
-  ROT,      /*!< \brief Rotation correction. */
-  BC,       /*!< \brief Bas-Cakmakcioclu transition. */
-  EXP,      /*!< \brief Allow experimental combinations of options (according to TMR). */
+  NONE,       /*!< \brief No option / default. */
+  NEG,        /*!< \brief Negative SA. */
+  EDW,        /*!< \brief Edwards version. */
+  FT2,        /*!< \brief Use FT2 term. */
+  LRE,        /*!< \brief Low Reynolds number version. */
+  IA,         /*!< \brief With trip term. */
+  CATRIS,     /*!< \brief Catris and Aupoix compressible form. */
+  CATCONS,    /*!< \brief Catris and Aupoix compressible form with beta=0. */
+  KL,         /*!< \brief Kato-Launder correction. */
+  QCR2000,    /*!< \brief Quadratic constitutive relation, version 2000. */
+  QCR2013,    /*!< \brief Quadratic constitutive relation, version 2013 (strain). */
+  QCR2013V,   /*!< \brief Quadratic constitutive relation, version 2013 (vorticity). */
+  QCR2020,    /*!< \brief Quadratic constitutive relation, version 2020. */
+  COMP,       /*!< \brief Compressibility correction. */
+  HELI,       /*!< \brief With Velocity Helicity. */
+  ROT,        /*!< \brief Rotation correction. */
+  RC,         /*!< \brief Rotation and curvature correction. */
+  ROUGH,      /*!< \brief Boeing Roughness correction. */
+  SALSA,      /*!< \brief Strain Adaptive Formulation. */
+  TC,         /*!< \brief Transverse curvature free-shear correction. */
+  BC,         /*!< \brief Bas-Cakmakcioclu transition. */
+  EXP,        /*!< \brief Allow experimental combinations of options (according to TMR). */
 };
 static const MapType<std::string, SA_OPTIONS> SA_Options_Map = {
-  MakePair("NONE", SA_OPTIONS::NONE)
-  MakePair("NEGATIVE", SA_OPTIONS::NEG)
-  MakePair("EDWARDS", SA_OPTIONS::EDW)
-  MakePair("WITHFT2", SA_OPTIONS::FT2)
-  MakePair("QCR2000", SA_OPTIONS::QCR2000)
+  MakePair("NONE",            SA_OPTIONS::NONE)
+  MakePair("NEGATIVE",        SA_OPTIONS::NEG)
+  MakePair("EDWARDS",         SA_OPTIONS::EDW)
+  MakePair("WITHFT2",         SA_OPTIONS::FT2)
+  MakePair("LOWRE",           SA_OPTIONS::LRE)
+  MakePair("IA",              SA_OPTIONS::IA)
+  MakePair("CATRIS",          SA_OPTIONS::CATRIS)
+  MakePair("CATCONS",         SA_OPTIONS::CATCONS)
   MakePair("COMPRESSIBILITY", SA_OPTIONS::COMP)
-  MakePair("ROTATION", SA_OPTIONS::ROT)
-  MakePair("BCM", SA_OPTIONS::BC)
-  MakePair("EXPERIMENTAL", SA_OPTIONS::EXP)
+  MakePair("QCR2000",         SA_OPTIONS::QCR2000)
+  MakePair("QCR2013",         SA_OPTIONS::QCR2013)
+  MakePair("QCR2013V",        SA_OPTIONS::QCR2013V)
+  MakePair("QCR2020",         SA_OPTIONS::QCR2020)
+  MakePair("ROUGH",           SA_OPTIONS::ROUGH)
+  MakePair("SALSA",           SA_OPTIONS::SALSA)
+  MakePair("ROTATION",        SA_OPTIONS::ROT)
+  MakePair("KATO-LAUNDER",    SA_OPTIONS::KL)
+  MakePair("RC",              SA_OPTIONS::RC)
+  MakePair("TC",              SA_OPTIONS::TC)
+  MakePair("BCM",             SA_OPTIONS::BC)
+  MakePair("EXPERIMENTAL",    SA_OPTIONS::EXP)
 };
 
 /*!
  * \brief Structure containing parsed SA options.
  */
 struct SA_ParsedOptions {
-  SA_OPTIONS version = SA_OPTIONS::NONE;  /*!< \brief SA base model. */
+  SA_OPTIONS version  = SA_OPTIONS::FT2;  /*!< \brief SA base model. */
+  SA_OPTIONS rotation = SA_OPTIONS::NONE; /*!< \brief SA rotation correction. */
+  SA_OPTIONS qrc      = SA_OPTIONS::NONE; /*!< \brief SA quadratic constitutive relation. */
   bool ft2 = false;                       /*!< \brief Use ft2 term. */
   bool qcr2000 = false;                   /*!< \brief Use QCR-2000. */
   bool comp = false;                      /*!< \brief Use compressibility correction. */
@@ -1126,27 +1163,76 @@ inline SA_ParsedOptions ParseSAOptions(const SA_OPTIONS *SA_Options, unsigned sh
     const auto sa_options_end = SA_Options + nSA_Options;
     return std::find(SA_Options, sa_options_end, option) != sa_options_end;
   };
+  //models
+  const bool sa_neg       = IsPresent(SA_OPTIONS::NEG);
+  const bool sa_edw       = IsPresent(SA_OPTIONS::EDW);
+  const bool sa_withft2   = IsPresent(SA_OPTIONS::FT2);
+  const bool sa_lre       = IsPresent(SA_OPTIONS::LRE);
+  const bool sa_comp      = IsPresent(SA_OPTIONS::COMP);
+  const bool sa_cat       = IsPresent(SA_OPTIONS::CATRIS);
+  const bool sa_catcons   = IsPresent(SA_OPTIONS::CATCONS);
+  //models, tripping
+  const bool sa_bc        = IsPresent(SA_OPTIONS::BC);
+  const bool sa_ia        = IsPresent(SA_OPTIONS::IA);
+  //options
+  const bool sa_qcr2000   = IsPresent(SA_OPTIONS::QCR2000);
+  const bool sa_qcr2013   = IsPresent(SA_OPTIONS::QCR2013);
+  const bool sa_qcr2013v  = IsPresent(SA_OPTIONS::QCR2013);
+  const bool sa_qcr2020   = IsPresent(SA_OPTIONS::QCR2020);
+  const bool sa_kl        = IsPresent(SA_OPTIONS::KL);
+  const bool sa_r         = IsPresent(SA_OPTIONS::ROT);
+  const bool sa_rc        = IsPresent(SA_OPTIONS::RC);
+  const bool sa_helicity  = IsPresent(SA_OPTIONS::HELI);
+  const bool sa_rough     = IsPresent(SA_OPTIONS::ROUGH);
+  const bool sa_salsa     = IsPresent(SA_OPTIONS::SALSA);
+  const bool sa_tc        = IsPresent(SA_OPTIONS::TC);
+  //misc
+  const bool exp          = IsPresent(SA_OPTIONS::EXP);
 
-  const bool found_neg = IsPresent(SA_OPTIONS::NEG);
-  const bool found_edw = IsPresent(SA_OPTIONS::EDW);
-  const bool found_bsl = !found_neg && !found_edw;
 
-  if (found_neg && found_edw) {
-    SU2_MPI::Error("Two versions (Negative and Edwards) selected for SA_OPTIONS. Please choose only one.", CURRENT_FUNCTION);
+
+  //const bool found_bsl = !found_neg && !found_edw;
+  
+  //option validation
+  if (int(sa_neg) + int(sa_edw) + int(sa_comp) + int(sa_lre) + int(sa_cat) + int(sa_catcons) > 1) {
+    SU2_MPI::Error( "More than one model version selected for SA_OPTIONS. \n"
+                    "Please choose only one model (NEGATIVE, EDWARDS, COMPRESSIBILITY, LOWRE, CATRIS, CATCONS).\n"
+                    "See: https://turbmodels.larc.nasa.gov/spalart.html", CURRENT_FUNCTION);
+  }
+  if (int(sa_kl) + int(sa_r) + int(sa_rc) > 1) {
+    SU2_MPI::Error( "More than one correction selected for SA_OPTIONS. \n"
+                    "Please choose only one option (ROTATION, RC, KATO-LAUNDER).\n"    
+                    "See: https://turbmodels.larc.nasa.gov/spalart.html", CURRENT_FUNCTION);
+  }
+  if (int(sa_qcr2000) + int(sa_qcr2013) + int(sa_qcr2013v) + int(sa_qcr2020) > 1) {
+    SU2_MPI::Error( "More than one quadratic consittutive relation model selected for SA_OPTIONS. \n"
+                    "Please choose only one option (QRC2000, QRC2013, QRC2013V, QRC2020).\n"    
+                    "See: https://turbmodels.larc.nasa.gov/spalart.html", CURRENT_FUNCTION);   
   }
 
-  if (found_bsl) {
-    SAParsedOptions.version = SA_OPTIONS::NONE;
-  } else if (found_neg) {
-    SAParsedOptions.version = SA_OPTIONS::NEG;
-  } else {
-    SAParsedOptions.version = SA_OPTIONS::EDW;
-  }
+  if (sa_withft2) SAParsedOptions.version   = SA_OPTIONS::FT2;
+  if (sa_neg)     SAParsedOptions.version   = SA_OPTIONS::NEG;
+  if (sa_edw)     SAParsedOptions.version   = SA_OPTIONS::EDW;
+  if (sa_cat)     SAParsedOptions.version   = SA_OPTIONS::CATRIS;
+  if (sa_catcons) SAParsedOptions.version   = SA_OPTIONS::CATCONS;
+  if (sa_salsa)   SAParsedOptions.version   = SA_OPTIONS::SALSA;
+    
+  if (sa_kl)      SAParsedOptions.rotation  = SA_OPTIONS::KL;
+  if (sa_r)       SAParsedOptions.rotation  = SA_OPTIONS::ROT;
+  if (sa_rc)      SAParsedOptions.rotation  = SA_OPTIONS::RC;
+
+  if (sa_qcr2000) SAParsedOptions.qrc       = SA_OPTIONS::QCR2000;
+  if (sa_qcr2013) SAParsedOptions.qrc       = SA_OPTIONS::QCR2013;
+  if (sa_qcr2013v)SAParsedOptions.qrc       = SA_OPTIONS::QCR2013V;
+  if (sa_qcr2020) SAParsedOptions.qrc       = SA_OPTIONS::QCR2020;
+
+  //dev -> are all these bools necessary?
   SAParsedOptions.ft2 = IsPresent(SA_OPTIONS::FT2);
   SAParsedOptions.qcr2000 = IsPresent(SA_OPTIONS::QCR2000);
   SAParsedOptions.comp = IsPresent(SA_OPTIONS::COMP);
   SAParsedOptions.rot = IsPresent(SA_OPTIONS::ROT);
   SAParsedOptions.bc = IsPresent(SA_OPTIONS::BC);
+
 
   /*--- Validate user settings when not in experimental mode. ---*/
   if (!IsPresent(SA_OPTIONS::EXP)) {
@@ -1154,9 +1240,12 @@ inline SA_ParsedOptions ParseSAOptions(const SA_OPTIONS *SA_Options, unsigned sh
 
     switch (SAParsedOptions.version) {
       case SA_OPTIONS::NEG:
-        if (!SAParsedOptions.ft2 || SAParsedOptions.bc)
-          SU2_MPI::Error("A non-standard version of SA-neg was requested (see https://turbmodels.larc.nasa.gov/spalart.html).\n"
-                         "If you want to continue, add EXPERIMENTAL to SA_OPTIONS.", CURRENT_FUNCTION);
+        
+        // commented out temporarily - original reference ICCFD7-1902 does not mandate ft2 term explicitly
+        // if (!SAParsedOptions.ft2 || SAParsedOptions.bc)
+        if (SAParsedOptions.bc)
+           SU2_MPI::Error("A non-standard version of SA-neg was requested (see https://turbmodels.larc.nasa.gov/spalart.html).\n"
+                          "If you want to continue, add EXPERIMENTAL to SA_OPTIONS.", CURRENT_FUNCTION);
         break;
       case SA_OPTIONS::EDW:
         if (any_but_bc || SAParsedOptions.bc)
@@ -1172,6 +1261,722 @@ inline SA_ParsedOptions ParseSAOptions(const SA_OPTIONS *SA_Options, unsigned sh
   }
   return SAParsedOptions;
 }
+
+/*!
+ * \brief Wray-Agarwal Options
+ */
+enum class WA_OPTIONS {
+    NONE,     /*!< \brief No option / default. */
+    WA2017,   /*!< \brief WA-2017 variant*/
+    WA2018,   /*!< \brief WA-2018 variant*/
+};
+static const MapType<std::string, WA_OPTIONS> WA_Options_Map = {
+  MakePair("NONE", WA_OPTIONS::NONE)
+  MakePair("WA-2017", WA_OPTIONS::WA2017)
+  MakePair("WA-2018", WA_OPTIONS::WA2018)
+};
+
+/*!
+ * \brief Structure containing parsed WA options.
+ */
+struct WA_ParsedOptions {
+  WA_OPTIONS version = WA_OPTIONS::NONE;  /*!< \brief SA base model. */
+};
+
+/*!
+ * \brief Function to parse Wray-Agarwal options.
+ * \param[in] WA_Options - Selected Wray-Agarwal option from config.
+ * \param[in] nWA_Options - Number of options selected.
+ * \param[in] rank - MPI rank.
+ * \return Struct with NUT-92 options.
+ */
+inline WA_ParsedOptions ParseWAOptions(const WA_OPTIONS *WA_Options, unsigned short nWA_Options, int rank) {
+  WA_ParsedOptions WAParsedOptions;
+
+  auto IsPresent = [&](WA_OPTIONS option) {
+  const auto wa_options_end = WA_Options + nWA_Options;
+  return std::find(WA_Options, wa_options_end, option) != wa_options_end;
+  };
+
+  const bool wa2017 = IsPresent(WA_OPTIONS::WA2017); 
+  const bool wa2018 = IsPresent(WA_OPTIONS::WA2018); 
+
+  if ((int(wa2017) + int(wa2018)) > 1)
+      SU2_MPI::Error( "More than one model version selected for WA_OPTIONS. Please select only one  (WA-2017 or WA-2018).\n"
+                      "See: https://turbmodels.larc.nasa.gov/wray_agarwal.html", CURRENT_FUNCTION); 
+
+  if ((int(wa2017) + int(wa2018)) == 0)
+    WAParsedOptions.version = WA_OPTIONS::WA2018;
+
+  if (wa2017)
+    WAParsedOptions.version = WA_OPTIONS::WA2017;
+  if (wa2018)
+    WAParsedOptions.version = WA_OPTIONS::WA2018;  //default  
+
+  //unavailable models
+  if (wa2017)  SU2_MPI::Error("WA-2017 turbulence model not available", CURRENT_FUNCTION);
+  if (wa2018)  SU2_MPI::Error("WA-2018 turbulence model not available", CURRENT_FUNCTION);
+
+  return WAParsedOptions;
+}
+
+/*!
+ * \brief BSL Turbulence Options
+ */
+enum class BSL_OPTIONS {
+    NONE,     /*!< \brief No option / default. */
+    BSL,      /*!< \brief Menter BSL model. */
+    BSLm,     /*!< \brief Menter BSL modified model. */
+    KL,       /*!< \brief Menter BSL option: Kato-Launder production terms. */
+    V,        /*!< \brief Menter BSL option: vorticity production terms. */
+};
+static const MapType<std::string, BSL_OPTIONS> BSL_Options_Map = {
+  MakePair("NONE",          BSL_OPTIONS::NONE)
+  MakePair("BSL",           BSL_OPTIONS::BSL)
+  MakePair("BSLm",          BSL_OPTIONS::BSLm)
+  MakePair("KATO-LAUNDER",  BSL_OPTIONS::KL)
+  MakePair("VORTICITY",     BSL_OPTIONS::V)
+};
+
+/*!
+ * \brief Structure containing parsed BSL options.
+ */
+struct BSL_ParsedOptions {
+  //BSL_OPTIONS boundary_condition = BSL_OPTIONS::NONE;  /*!< \brief  model. */
+  BSL_OPTIONS version = BSL_OPTIONS::BSL;
+  bool modified = false;
+  bool kl = false;
+  bool v = false;
+};
+
+/*!
+ * \brief Function to parse BSL options.
+ * \param[in] BSL_Options - Selected turb dev option from config.
+ * \param[in] nBSL_Options - Number of options selected.
+ * \param[in] rank - MPI rank.
+ * \return Struct with turb dev options.
+ */
+inline BSL_ParsedOptions ParseBSLOptions(const BSL_OPTIONS *BSL_Options, unsigned short nBSL_Options, int rank) {
+  BSL_ParsedOptions BSLParsedOptions;
+
+  auto IsPresent = [&](BSL_OPTIONS option) {
+    const auto BSL_options_end = BSL_Options + nBSL_Options;
+    return std::find(BSL_Options, BSL_options_end, option) != BSL_options_end;
+  };
+
+  const bool bsl        = IsPresent(BSL_OPTIONS::BSL);
+  const bool bslm       = IsPresent(BSL_OPTIONS::BSLm);
+  const bool bsl_kl     = IsPresent(BSL_OPTIONS::KL);
+  const bool bsl_v      = IsPresent(BSL_OPTIONS::V);
+
+  //option validation
+  if ((int(bsl) + int(bslm)) > 1)
+    SU2_MPI::Error( "More than one model version selected for BSL_OPTIONS. Please select only one (BSL or BSLm).\n"
+                    "See: https://turbmodels.larc.nasa.gov/bsl.html", CURRENT_FUNCTION); 
+  if ((int(bsl_kl) + int(bsl_v)) > 1)
+    SU2_MPI::Error( "Invalid option combination selected for BSL_OPTIONS. Please select only one (VORTICITY or KATO-LAUNDER).\n"
+                    "See: https://turbmodels.larc.nasa.gov/bsl.html", CURRENT_FUNCTION); 
+
+  BSLParsedOptions.version  = BSL_OPTIONS::BSL;   //only one version, redundant
+
+  if (int(bsl) + int(bslm) == 0) {
+    //default version
+    BSLParsedOptions.modified = false;
+  } else {
+    if (bsl) {
+      BSLParsedOptions.modified = false;
+    }
+    if (bslm) {
+      BSLParsedOptions.modified = true;
+    }
+  }
+
+  BSLParsedOptions.kl = bsl_kl;
+  BSLParsedOptions.v  = bsl_v;
+
+  //unavailable models
+  if (bsl_kl) SU2_MPI::Error("Kato-Launder correction for BSL turbulence model not available", CURRENT_FUNCTION);
+  if (bsl_v)  SU2_MPI::Error("Vorticity source term for BSL turbulence model not available", CURRENT_FUNCTION);
+  if (bsl)    SU2_MPI::Error("BSL turbulence model not available", CURRENT_FUNCTION);
+  if (bslm)   SU2_MPI::Error("BSLm turbulence model not available", CURRENT_FUNCTION);
+
+  return BSLParsedOptions;
+}
+
+/*!
+ * \brief CKE Turbulence Options
+ */
+enum class CKE_OPTIONS {
+    NONE,     /*!< \brief No option / default. */
+    CKE,      /*!< \brief Chien k-epsilon.*/ 
+    CKECOMP   /*!< \brief Chien k-epsilon with compressibility correction.*/ 
+};
+static const MapType<std::string, CKE_OPTIONS> CKE_Options_Map = {
+  MakePair("NONE",          CKE_OPTIONS::NONE)
+  MakePair("KE-CHIEN",      CKE_OPTIONS::CKE)
+  MakePair("KE-CHIEN-COMP", CKE_OPTIONS::CKECOMP)
+};
+
+/*!
+ * \brief Structure containing parsed CKE options.
+ */
+struct CKE_ParsedOptions {
+  //CKE_OPTIONS boundary_condition = CKE_OPTIONS::NONE;  /*!< \brief  model. */
+  CKE_OPTIONS version = CKE_OPTIONS::NONE;
+};
+
+/*!
+ * \brief Function to parse CKE options.
+ * \param[in] CKE_Options - Selected turb dev option from config.
+ * \param[in] nCKE_Options - Number of options selected.
+ * \param[in] rank - MPI rank.
+ * \return Struct with turb dev options.
+ */
+inline CKE_ParsedOptions ParseCKEOptions(const CKE_OPTIONS *CKE_Options, unsigned short nCKE_Options, int rank) {
+  CKE_ParsedOptions CKEParsedOptions;
+
+  auto IsPresent = [&](CKE_OPTIONS option) {
+    const auto CKE_options_end = CKE_Options + nCKE_Options;
+    return std::find(CKE_Options, CKE_options_end, option) != CKE_options_end;
+  };
+
+  const bool ke_chien       = IsPresent(CKE_OPTIONS::CKE);
+  const bool ke_chien_comp  = IsPresent(CKE_OPTIONS::CKECOMP);
+
+  //option validation
+  if ((int(ke_chien) + int(ke_chien_comp)) > 1)
+    SU2_MPI::Error( "More than one model version selected for CKE_OPTIONS. Please select only one  (V1994, V1994m, V2003, or V2003m).\n"
+                    "See: https://turbmodels.larc.nasa.gov/ke-chien.html", CURRENT_FUNCTION); 
+
+  if ((int(ke_chien) + int(ke_chien_comp)) == 0) {
+    CKEParsedOptions.version = CKE_OPTIONS::CKE;
+  } else {
+    if (ke_chien)
+      CKEParsedOptions.version = CKE_OPTIONS::CKE;
+    if (ke_chien_comp)
+      CKEParsedOptions.version = CKE_OPTIONS::CKECOMP;
+  }
+
+  //unavailable models
+  if (ke_chien)       SU2_MPI::Error("Chien k-epsilon turbulence model not available", CURRENT_FUNCTION);
+  if (ke_chien_comp)  SU2_MPI::Error("Chien k-epsilon turbulence model with compressibility correction not available", CURRENT_FUNCTION);
+
+  return CKEParsedOptions;
+}
+
+
+/*!
+ * \brief KKL Turbulence Options
+ */
+enum class KKL_OPTIONS {
+    NONE,     /*!< \brief No option / default. */
+};
+static const MapType<std::string, KKL_OPTIONS> KKL_Options_Map = {
+  MakePair("NONE", KKL_OPTIONS::NONE)
+};
+
+/*!
+ * \brief Structure containing parsed KKL options.
+ */
+struct KKL_ParsedOptions {
+  KKL_OPTIONS boundary_condition = KKL_OPTIONS::NONE;  /*!< \brief  model. */
+};
+
+/*!
+ * \brief Function to parse KKL options.
+ * \param[in] KKL_Options - Selected turb dev option from config.
+ * \param[in] nKKL_Options - Number of options selected.
+ * \param[in] rank - MPI rank.
+ * \return Struct with turb dev options.
+ */
+inline KKL_ParsedOptions ParseKKLOptions(const KKL_OPTIONS *KKL_Options, unsigned short nKKL_Options, int rank) {
+  KKL_ParsedOptions KKLParsedOptions;
+
+  auto IsPresent = [&](KKL_OPTIONS option) {
+    const auto KKL_options_end = KKL_Options + nKKL_Options;
+    return std::find(KKL_Options, KKL_options_end, option) != KKL_options_end;
+  };
+
+  SU2_MPI::Error("K-kL turbulence model not available", CURRENT_FUNCTION);
+
+  return KKLParsedOptions;
+}
+
+/*!
+ * \brief SST Options
+ */
+enum class SST_OPTIONS {
+  NONE,        /*!< \brief No SST Turb model. */
+  V1994,       /*!< \brief 1994 Menter k-w SST model. */
+  V2003,       /*!< \brief 2003 Menter k-w SST model. */
+  V1994m,      /*!< \brief 1994m Menter k-w SST modified model. */
+  V2003m,      /*!< \brief 2003m Menter k-w SST modified model. */
+  RC,          /*!< \brief Menter k-w SST option: rotation/curvature correction.*/
+  RCH,         /*!< \brief Menter k-w SST option: Hellsten rotation/curvature correction.*/
+  SUST,        /*!< \brief Menter k-w SST option: sustaining terms. */
+  V,           /*!< \brief Menter k-w SST option: vorticity production terms. */
+  KL,          /*!< \brief Menter k-w SST option: Kato-Launder production terms. */
+  UQ,          /*!< \brief Menter k-w SST option: uncertainty quantification modifications. */
+};
+
+static const MapType<std::string, SST_OPTIONS> SST_Options_Map = {
+  MakePair("NONE",          SST_OPTIONS::NONE)
+  MakePair("V1994",         SST_OPTIONS::V1994)
+  MakePair("V2003",         SST_OPTIONS::V2003)
+  MakePair("V1994m",        SST_OPTIONS::V1994m)
+  MakePair("V2003m",        SST_OPTIONS::V2003m)
+  MakePair("RC",            SST_OPTIONS::RC)
+  MakePair("RC-HELLSTEN",   SST_OPTIONS::RCH)
+  MakePair("SUSTAINING",    SST_OPTIONS::SUST)
+  MakePair("VORTICITY",     SST_OPTIONS::V)
+  MakePair("KATO-LAUNDER",  SST_OPTIONS::KL)
+  MakePair("UQ",            SST_OPTIONS::UQ)
+};
+
+/*!
+ * \brief Structure containing parsed SST options.
+ */
+struct SST_ParsedOptions {
+  SST_OPTIONS version = SST_OPTIONS::V1994;     /*!< \brief Enum SST base model. */
+  SST_OPTIONS production = SST_OPTIONS::NONE;   /*!< \brief Enum for production corrections/modifiers for SST model. */
+  SST_OPTIONS rotcurvature = SST_OPTIONS::NONE; /*!< \brief Enum for rotation/curvature correction.*/
+  bool modified = false;                        /*!< \brief Bool for modified (m) SST model. */
+  bool kl       = false;                        /*!< \brief Bool for SST option with Kato-Launder production terms. */
+  bool rc       = false;                        /*!< \brief Bool for SST option with rotation/curvature correction.*/
+  bool rch      = false;                        /*!< \brief Bool for SST option with Hellsten rotation/curvature correction.*/
+  bool sust     = false;                        /*!< \brief Bool for SST option with sustaining terms. */
+  bool uq       = false;                        /*!< \brief Bool for SST option using uncertainty quantification. */
+  bool v        = false;                        /*!< \brief Bool for SST option with vorticity production terms. */
+};
+
+/*!
+ * \brief Function to parse SST options.
+ * \param[in] SST_Options - Selected SST option from config.
+ * \param[in] nSST_Options - Number of options selected.
+ * \param[in] rank - MPI rank.
+ * \return Struct with SST options.
+ */
+inline SST_ParsedOptions ParseSSTOptions(const SST_OPTIONS *SST_Options, unsigned short nSST_Options, int rank) {
+  SST_ParsedOptions SSTParsedOptions;
+
+  auto IsPresent = [&](SST_OPTIONS option) {
+    const auto sst_options_end = SST_Options + nSST_Options;
+    return std::find(SST_Options, sst_options_end, option) != sst_options_end;
+  };
+
+  //reads model version
+  const bool sst_1994   = IsPresent(SST_OPTIONS::V1994);
+  const bool sst_2003   = IsPresent(SST_OPTIONS::V2003);
+  const bool sst_1994m  = IsPresent(SST_OPTIONS::V1994m);
+  const bool sst_2003m  = IsPresent(SST_OPTIONS::V2003m);
+  //reads additional options
+  const bool sst_kl     = IsPresent(SST_OPTIONS::KL);  
+  const bool sst_rc     = IsPresent(SST_OPTIONS::RC);
+  const bool sst_rch    = IsPresent(SST_OPTIONS::RCH);
+  const bool sst_sust   = IsPresent(SST_OPTIONS::SUST);
+  const bool sst_v      = IsPresent(SST_OPTIONS::V);
+  const bool sst_uq     = IsPresent(SST_OPTIONS::UQ);
+
+  //option validation
+  if ((int(sst_1994) + int(sst_1994m) + int(sst_2003) + int(sst_2003m)) > 1)
+    SU2_MPI::Error( "More than one model version selected for SST_OPTIONS. Please select only one  (V1994, V1994m, V2003, or V2003m).\n"
+                    "See: https://turbmodels.larc.nasa.gov/sst.html", CURRENT_FUNCTION); 
+  if ((int(sst_v) + int(sst_kl) + int(sst_uq)) > 1) 
+    SU2_MPI::Error( "Invalid option combination selected for for SST_OPTIONS. Please select only one (VORTICITY, KATO-LAUNDER, or UQ).\n"
+                    "See: https://turbmodels.larc.nasa.gov/sst.html", CURRENT_FUNCTION);
+  if ((int(sst_rc) + int(sst_rch)) > 1)
+    SU2_MPI::Error( "Invalid combination of rotation/curvature correction selected for SST_OPTIONS. Please select only one (RC, RC=HELLSTEN).\n"
+                    "See: https://turbmodels.larc.nasa.gov/sst.html", CURRENT_FUNCTION);
+  
+  //note: would prefer to use SST options only instead of 'modified' bool
+  if ((int(sst_1994) + int(sst_1994m) + int(sst_2003) + int(sst_2003m)) == 0) {
+    //default version
+    SSTParsedOptions.version  = SST_OPTIONS::V2003; 
+    SSTParsedOptions.modified = true;
+  } else {
+    if (sst_1994) {
+      SSTParsedOptions.version  = SST_OPTIONS::V1994; 
+      SSTParsedOptions.modified = false;
+    }
+    if (sst_1994m) {
+      SSTParsedOptions.version  = SST_OPTIONS::V1994; 
+      SSTParsedOptions.modified = true;
+    }
+    if (sst_2003) {
+      SSTParsedOptions.version  = SST_OPTIONS::V2003; 
+      SSTParsedOptions.modified = false;
+    }
+    if (sst_2003m) {
+      SSTParsedOptions.version  = SST_OPTIONS::V2003; 
+      SSTParsedOptions.modified = true;
+    }
+  }
+
+  // Parse production modifications
+  if (sst_v) 
+    SSTParsedOptions.production = SST_OPTIONS::V;
+  if (sst_kl) 
+    SSTParsedOptions.production = SST_OPTIONS::KL;
+  if (sst_uq) 
+    SSTParsedOptions.production = SST_OPTIONS::UQ;
+  
+  //Parse rotation / curvature modificaitons
+  if (sst_rc)
+    SSTParsedOptions.rotcurvature = SST_OPTIONS::RC;
+  if (sst_rch)
+    SSTParsedOptions.rotcurvature = SST_OPTIONS::RCH;
+
+  SSTParsedOptions.kl = sst_kl;
+  SSTParsedOptions.rc = sst_rc;
+  SSTParsedOptions.rch = sst_rch;
+  SSTParsedOptions.sust = sst_sust;
+  SSTParsedOptions.uq = sst_uq;
+  SSTParsedOptions.v = sst_v;
+
+
+  //unavailable models
+  if (sst_1994) SU2_MPI::Error("Unmodified SST turbulence model (1994) not available", CURRENT_FUNCTION);
+  if (sst_2003) SU2_MPI::Error("Unmodified SST turbulence model (2003) not available", CURRENT_FUNCTION);
+  if (sst_rc)   SU2_MPI::Error("Rotation/curvature correction SST turbulence model not available", CURRENT_FUNCTION);
+  if (sst_rch)  SU2_MPI::Error("Hellsten rotation/curvature correction SST turbulence model not available", CURRENT_FUNCTION);
+  
+  return SSTParsedOptions;
+}
+
+
+/*!
+ * \brief WKW Turbulence Options
+ */
+enum class WKW_OPTIONS {
+    NONE,     /*!< \brief No option / default. */
+    V1988,    /*!< \brief Wilcox k-omega model 1988 version.*/
+    V1988m,   /*!< \brief Wilcox k-omega model 1988 version modified.*/
+    V1998,    /*!< \brief Wilcox k-omega model 1998 version.*/
+    V1998m,   /*!< \brief Wilcox k-omega model 1998 version modified.*/
+    V2006,    /*!< \brief Wilcox k-omega model 2006 version.*/
+    V2006m,   /*!< \brief Wilcox k-omega model 2006 version modified.*/
+    KL,       /*!< \brief Wilcox k-omega option: Kato-Launder correction.*/
+    NOPOPE,   /*!< \bvief Wilcox k-omega option: no Pope correction.*/
+    LRN,      /*!< \brief Wilcox k-omega option: low Reynolds number version.*/
+    KLIM,     /*!< \brief Wilcox k-omega option: .*/
+    V         /*!< \brief Wilcox k-omega option: .*/
+};
+
+static const MapType<std::string, WKW_OPTIONS> WKW_Options_Map = {
+  MakePair("NONE",          WKW_OPTIONS::NONE)
+  MakePair("V1988",         WKW_OPTIONS::V1988)
+  MakePair("V1988m",        WKW_OPTIONS::V1988m)
+  MakePair("V1998",         WKW_OPTIONS::V1998)
+  MakePair("V1998m",        WKW_OPTIONS::V1998m)
+  MakePair("V2006",         WKW_OPTIONS::V2006)
+  MakePair("V2006m",        WKW_OPTIONS::V2006m)
+  MakePair("K-LIM",         WKW_OPTIONS::KLIM)
+  MakePair("KATO-LAUNDER",  WKW_OPTIONS::KL)
+  MakePair("LOWRE",         WKW_OPTIONS::LRN)
+  MakePair("NO_POPE",       WKW_OPTIONS::NOPOPE)
+  MakePair("VORTICITY",     WKW_OPTIONS::V)
+};
+
+/*!
+ * \brief Structure containing parsed WKW options.
+ */
+struct WKW_ParsedOptions {
+  //WKW_OPTIONS boundary_condition = WKW_OPTIONS::NONE;  /*!< \brief  model. */
+  WKW_OPTIONS version = WKW_OPTIONS::NONE;
+  bool nopope = false;
+  bool lrn    = false;
+  bool kl     = false;
+  bool klim   = false;
+  bool v      = false;
+};
+
+/*!
+ * \brief Function to parse WKW options.
+ * \param[in] WKW_Options - Selected turb dev option from config.
+ * \param[in] nWKW_Options - Number of options selected.
+ * \param[in] rank - MPI rank.
+ * \return Struct with turb dev options.
+ */
+inline WKW_ParsedOptions ParseWKWOptions(const WKW_OPTIONS *WKW_Options, unsigned short nWKW_Options, int rank) {
+  WKW_ParsedOptions WKWParsedOptions;
+
+  auto IsPresent = [&](WKW_OPTIONS option) {
+    const auto WKW_options_end = WKW_Options + nWKW_Options;
+    return std::find(WKW_Options, WKW_options_end, option) != WKW_options_end;
+  };
+
+  //reads model version
+  const bool wkw2006     = IsPresent(WKW_OPTIONS::V2006);
+  const bool wkw2006m    = IsPresent(WKW_OPTIONS::V2006m);
+  const bool wkw1998     = IsPresent(WKW_OPTIONS::V1998);
+  const bool wkw1998m    = IsPresent(WKW_OPTIONS::V1998m);
+  const bool wkw1988     = IsPresent(WKW_OPTIONS::V1988);
+  const bool wkw1988m    = IsPresent(WKW_OPTIONS::V1988m);
+  //reads additional options
+  const bool wkw_klim    = IsPresent(WKW_OPTIONS::KLIM);
+  const bool wkw_kl      = IsPresent(WKW_OPTIONS::KL);
+  const bool wkw_lrn     = IsPresent(WKW_OPTIONS::LRN);
+  const bool wkw_nopope  = IsPresent(WKW_OPTIONS::NOPOPE);
+  const bool wkw_v       = IsPresent(WKW_OPTIONS::V);
+
+  //option validation
+  //only canonic options in https://turbmodels.larc.nasa.gov/wilcox.html allowed
+  if ((int(wkw2006) + int(wkw2006m) + int(wkw1998) + int(wkw1998m) + int(wkw1988) + int(wkw1988m)) > 1)  
+    SU2_MPI::Error( "More than one model version selected for WKW_OPTIONS. Please select only one  (V1988, V1988m, V1998, V1998m, V2006, V2006m).\n"
+                    "See: https://turbmodels.larc.nasa.gov/wilcox.html", CURRENT_FUNCTION); 
+  if ((wkw1988 || wkw1988m || wkw1998 || wkw1998m) && wkw_klim)
+    // Turbmodels lists k-limiter only valid for 2006 version
+    // Possible experimental version?
+    SU2_MPI::Error( "Invalid option in WKW_OPTIONS (K-LIM). Production limiter is only available for Wilcox2006 and Wilcox2006m models (V2006, V2006m).\n"
+                    "See: https://turbmodels.larc.nasa.gov/wilcox.html", CURRENT_FUNCTION);
+  if ((wkw1988 || wkw1988m || wkw1998 || wkw1998m) && wkw_nopope)
+    // Turbmodels lists no Pope correction only valid for 2006 version
+    // Possible experimental version?
+    SU2_MPI::Error( "Invalid option in WKW_OPTIONS (NO_POPE). Disabling Pope correction is only available for Wilcox2006 and Wilcox2006m models (V2006, V2006m).\n"
+                    "See: https://turbmodels.larc.nasa.gov/wilcox.html", CURRENT_FUNCTION);
+  if ((wkw1988 || wkw1988m || wkw1998 || wkw1998m) && wkw_lrn)
+    // Turbmodels lists LRN only valid for 2006 version
+    SU2_MPI::Error( "Invalid option in WKW_OPTIONS (LOWRE). Low Reynolds number verwion is only available for Wilcox2006 and Wilcox2006m models (V2006, V2006m).\n"
+                    "See: https://turbmodels.larc.nasa.gov/wilcox.html", CURRENT_FUNCTION);
+  if (int(wkw_kl) + int(wkw_lrn) + int(wkw_nopope) + int(wkw_v) > 1)
+    // Turbmodels doesn't allow combination of K-Lim with others
+    // Possible experimental version?
+    SU2_MPI::Error( "Invalid option combination in WKW_OPTIONS. Options K-LIM, KATO-LAUNDER, LOWRE, NO_POPE, or VORTICITY cannot be combined.\n"  
+                    "See: https://turbmodels.larc.nasa.gov/wilcox.html", CURRENT_FUNCTION);
+
+  if ((int(wkw2006) + int(wkw2006m) + int(wkw1998) + int(wkw1998m) + int(wkw1988) + int(wkw1988m)) == 0) {
+    WKWParsedOptions.version  = WKW_OPTIONS::V2006;
+  } else {
+    if (wkw2006)  WKWParsedOptions.version = WKW_OPTIONS::V2006;
+    if (wkw2006m) WKWParsedOptions.version = WKW_OPTIONS::V2006;
+    if (wkw1998)  WKWParsedOptions.version = WKW_OPTIONS::V1998;
+    if (wkw1998m) WKWParsedOptions.version = WKW_OPTIONS::V1998m;
+    if (wkw1988)  WKWParsedOptions.version = WKW_OPTIONS::V1988;
+    if (wkw1988m) WKWParsedOptions.version = WKW_OPTIONS::V1988m;
+  }
+
+  if (wkw_kl)     WKWParsedOptions.kl     = true;
+  if (wkw_klim)   WKWParsedOptions.klim   = true;
+  if (wkw_lrn)    WKWParsedOptions.lrn    = true;
+  if (wkw_nopope) WKWParsedOptions.nopope = true;
+  if (wkw_v)      WKWParsedOptions.v      = true;
+
+  //unavailable models
+  if (wkw_kl)     SU2_MPI::Error("Kato-Launder correction for Wilcox k-omega turbulence model not available.", CURRENT_FUNCTION);
+  if (wkw_klim)   SU2_MPI::Error("Production limiter for Wilcox k-omega turbulence model not available.", CURRENT_FUNCTION);
+  if (wkw_lrn)    SU2_MPI::Error("Low Reynolds Wilcox k-omega turbulence model not available.", CURRENT_FUNCTION);
+  if (wkw_nopope) SU2_MPI::Error("No Pope correction for Wilcox k-omega turbulence model not available.", CURRENT_FUNCTION);
+  if (wkw_v)      SU2_MPI::Error("Voorticity source term for Wilcox k-omega turbulence model not available.", CURRENT_FUNCTION);  
+  if (wkw2006)    SU2_MPI::Error("Wilcox (2006)k-omega turbulence model not available.", CURRENT_FUNCTION);
+  if (wkw2006m)   SU2_MPI::Error("Wilcox (2006) modified k-omega turbulence model not available.", CURRENT_FUNCTION);
+  if (wkw1998)    SU2_MPI::Error("Wilcox (1998)k-omega turbulence model not available.", CURRENT_FUNCTION);
+  if (wkw1998m)   SU2_MPI::Error("Wilcox (1998) modified k-omega turbulence model not available.", CURRENT_FUNCTION);
+  if (wkw1988)    SU2_MPI::Error("Wilcox (1988)k-omega turbulence model not available.", CURRENT_FUNCTION);
+  if (wkw1988m)   SU2_MPI::Error("Wilcox (1988) modified k-omega turbulence model not available.", CURRENT_FUNCTION);
+
+  return WKWParsedOptions;
+}
+
+
+/*!
+ * \brief KERT Turbulence Options
+ */
+enum class KERT_OPTIONS {
+    NONE,     /*!< \brief No option / default. */
+    KERT,     /*!< \brief Standard K-e-Rt model.*/
+    ROTATION  /*!< \brief Rotation/curvature correction.*/
+};
+static const MapType<std::string, KERT_OPTIONS> KERT_Options_Map = {
+  MakePair("NONE",     KERT_OPTIONS::NONE)
+  MakePair("KERT",     KERT_OPTIONS::KERT)
+  MakePair("ROTATION", KERT_OPTIONS::ROTATION)
+};
+
+/*!
+ * \brief Structure containing parsed KERT options.
+ */
+struct KERT_ParsedOptions {
+  //KERT_OPTIONS boundary_condition = KERT_OPTIONS::NONE;  /*!< \brief  model. */
+  bool rotation = false;
+};
+
+/*!
+ * \brief Function to parse KERT options.
+ * \param[in] KERT_Options - Selected turb dev option from config.
+ * \param[in] nKERT_Options - Number of options selected.
+ * \param[in] rank - MPI rank.
+ * \return Struct with turb dev options.
+ */
+inline KERT_ParsedOptions ParseKERTOptions(const KERT_OPTIONS *KERT_Options, unsigned short nKERT_Options, int rank) {
+  KERT_ParsedOptions KERTParsedOptions;
+
+  auto IsPresent = [&](KERT_OPTIONS option) {
+    const auto KERT_options_end = KERT_Options + nKERT_Options;
+    return std::find(KERT_Options, KERT_options_end, option) != KERT_options_end;
+  };
+
+  const bool kert     = IsPresent(KERT_OPTIONS::KERT);
+  const bool kert_rot = IsPresent(KERT_OPTIONS::ROTATION);
+
+  //only option is rotation/curvature
+  if (kert_rot) KERTParsedOptions.rotation = true;
+
+  //unavailable models
+  if (kert_rot) SU2_MPI::Error("Rotation/curvature correction for k-e-Rt turbulence model not available", CURRENT_FUNCTION);
+  if (kert)     SU2_MPI::Error("k-e-Rt turbulence model not available", CURRENT_FUNCTION);
+
+  return KERTParsedOptions;
+}
+
+/*!
+ * \brief KEZF Turbulence Options
+ */
+enum class KEZF_OPTIONS {
+    NONE,     /*!< \brief No option / default. */
+    KEZF      /*!< \brief kE-z-f model. */
+};
+static const MapType<std::string, KEZF_OPTIONS> KEZF_Options_Map = {
+  MakePair("NONE", KEZF_OPTIONS::NONE)
+  MakePair("KEZF", KEZF_OPTIONS::KEZF)
+};
+
+/*!
+ * \brief Structure containing parsed KEZF options.
+ */
+struct KEZF_ParsedOptions {
+  //KEZF_OPTIONS boundary_condition = KEZF_OPTIONS::NONE;  /*!< \brief  model. */
+};
+
+/*!
+ * \brief Function to parse KEZF options.
+ * \param[in] KEZF_Options - Selected turb dev option from config.
+ * \param[in] nKEZF_Options - Number of options selected.
+ * \param[in] rank - MPI rank.
+ * \return Struct with turb dev options.
+ */
+inline KEZF_ParsedOptions ParseKEZFOptions(const KEZF_OPTIONS *KEZF_Options, unsigned short nKEZF_Options, int rank) {
+  KEZF_ParsedOptions KEZFParsedOptions;
+
+  auto IsPresent = [&](KEZF_OPTIONS option) {
+    const auto KEZF_options_end = KEZF_Options + nKEZF_Options;
+    return std::find(KEZF_Options, KEZF_options_end, option) != KEZF_options_end;
+  };
+
+  //no options
+
+  //unavailable models
+  SU2_MPI::Error("k-e-zeta-f turbulence model not available", CURRENT_FUNCTION);
+
+  return KEZFParsedOptions;
+}
+
+
+
+/*!
+ * \brief Dummy Turbulence Options
+ */
+enum class DUMMYTURB_OPTIONS {
+    NONE,     /*!< \brief No option / default. */
+    BC_SA,    /*!< \brief Boundary conditions from SA.*/
+    BC_SST,   /*!< \brief Boundary conditions from SST.*/
+};
+static const MapType<std::string, DUMMYTURB_OPTIONS> DUMMYTURB_Options_Map = {
+  MakePair("NONE", DUMMYTURB_OPTIONS::NONE)
+  MakePair("BC_SA", DUMMYTURB_OPTIONS::BC_SA)
+  MakePair("BC_SST", DUMMYTURB_OPTIONS::BC_SST)
+};
+
+
+/*!
+ * \brief Structure containing parsed dummy turbulence options.
+ */
+struct DUMMYTURB_ParsedOptions {
+  bool bcsa = false;  /*!< \brief  model. */
+  bool bcsst = false;  /*!< \brief  model. */
+  bool bcdefault = true; /*!< \brief  model. */
+};
+
+/*!
+ * \brief Function to parse dummy turb options.
+ * \param[in] DUMMYTURB_Options - Selected dummy turb option from config.
+ * \param[in] nDUMMYTURB_Options - Number of options selected.
+ * \param[in] rank - MPI rank.
+ * \return Struct with dummy turb options.
+ */
+inline DUMMYTURB_ParsedOptions ParseDUMMYTURBOptions(const DUMMYTURB_OPTIONS *DUMMYTURB_Options, unsigned short nDUMMYTURB_Options, int rank) {
+  DUMMYTURB_ParsedOptions DUMMYTURBParsedOptions;
+
+  auto IsPresent = [&](DUMMYTURB_OPTIONS option) {
+    const auto DUMMYTURB_options_end = DUMMYTURB_Options + nDUMMYTURB_Options;
+    return std::find(DUMMYTURB_Options, DUMMYTURB_options_end, option) != DUMMYTURB_options_end;
+  };
+
+  const bool found_BC_SA = IsPresent(DUMMYTURB_OPTIONS::BC_SA);
+  const bool found_BC_SST = IsPresent(DUMMYTURB_OPTIONS::BC_SST);
+
+  if (found_BC_SA && found_BC_SST)
+    SU2_MPI::Error("Two conflicting options (found_BC_SA and found_BC_SST) selected for DUMMYTURB_OPTIONS. Please choose only one.", CURRENT_FUNCTION);
+
+  if (found_BC_SA)
+  {
+    DUMMYTURBParsedOptions.bcsa = true;
+    DUMMYTURBParsedOptions.bcdefault = false;
+  }
+  else {
+    if (found_BC_SST)
+    {
+      DUMMYTURBParsedOptions.bcsst = true;
+          DUMMYTURBParsedOptions.bcdefault = false;
+    }
+    // else
+    // {
+    //   DUMMYTURBParsedOptions.bcdefault = true;  //default
+    // }
+  }
+
+  return DUMMYTURBParsedOptions;
+}
+
+/*!
+ * \brief Dev Turbulence Options
+ */
+enum class TURBDEV_OPTIONS {
+    NONE,     /*!< \brief No option / default. */
+    BC_SA,    /*!< \brief Boundary conditions from SA.*/
+    BC_SST,   /*!< \brief Boundary conditions from SST.*/
+};
+static const MapType<std::string, TURBDEV_OPTIONS> TURBDEV_Options_Map = {
+  MakePair("NONE", TURBDEV_OPTIONS::NONE)
+};
+
+/*!
+ * \brief Structure containing parsed turb dev options.
+ */
+struct TURBDEV_ParsedOptions {
+  TURBDEV_OPTIONS boundary_condition = TURBDEV_OPTIONS::NONE;  /*!< \brief  model. */
+};
+
+/*!
+ * \brief Function to parse turb dev options.
+ * \param[in] TURBDEV_Options - Selected turb dev option from config.
+ * \param[in] nTURBDEV_Options - Number of options selected.
+ * \param[in] rank - MPI rank.
+ * \return Struct with turb dev options.
+ */
+inline DUMMYTURB_ParsedOptions ParseTURBDEVOptions(const DUMMYTURB_OPTIONS *DUMMYTURB_Options, unsigned short nDUMMYTURB_Options, int rank) {
+  DUMMYTURB_ParsedOptions DUMMYTURBParsedOptions;
+
+  auto IsPresent = [&](DUMMYTURB_OPTIONS option) {
+    const auto DUMMYTURB_options_end = DUMMYTURB_Options + nDUMMYTURB_Options;
+    return std::find(DUMMYTURB_Options, DUMMYTURB_options_end, option) != DUMMYTURB_options_end;
+  };
+
+  const bool found_BC_SA = IsPresent(DUMMYTURB_OPTIONS::BC_SA);
+  const bool found_BC_SST = IsPresent(DUMMYTURB_OPTIONS::BC_SST);
+
+  return DUMMYTURBParsedOptions;
+}
+
 
 /*!
  * \brief Types of transition models
