@@ -33,8 +33,12 @@
 #include "../../include/solvers/CIncNSSolver.hpp"
 #include "../../include/solvers/CNEMOEulerSolver.hpp"
 #include "../../include/solvers/CNEMONSSolver.hpp"
+#include "../../include/solvers/CTurbTURBDEVSolver.hpp"
+#include "../../include/solvers/CTurbDUMMYTURBSolver.hpp"
+#include "../../include/solvers/CTurbNut92Solver.hpp"
 #include "../../include/solvers/CTurbSASolver.hpp"
 #include "../../include/solvers/CTurbSSTSolver.hpp"
+#include "../../include/solvers/CTurbWASolver.hpp"
 #include "../../include/solvers/CTransLMSolver.hpp"
 #include "../../include/solvers/CAdjEulerSolver.hpp"
 #include "../../include/solvers/CAdjNSSolver.hpp"
@@ -303,6 +307,9 @@ CSolver* CSolverFactory::CreateSubSolver(SUB_SOLVER_TYPE kindSolver, CSolver **s
       metaData.integrationType = INTEGRATION_TYPE::DEFAULT;
       break;
     case SUB_SOLVER_TYPE::TURB:
+    case SUB_SOLVER_TYPE::TURB_DEV:
+    case SUB_SOLVER_TYPE::TURB_DUMMY:
+    case SUB_SOLVER_TYPE::TURB_NUT92:
     case SUB_SOLVER_TYPE::TURB_SA:
     case SUB_SOLVER_TYPE::TURB_SST:
       genericSolver = CreateTurbSolver(kindTurbModel, solver, geometry, config, iMGLevel, false);
@@ -341,19 +348,87 @@ CSolver* CSolverFactory::CreateTurbSolver(TURB_MODEL kindTurbModel, CSolver **so
   CSolver *turbSolver = nullptr;
 
   if (!adjoint){
-    switch (TurbModelFamily(kindTurbModel)) {
-      case TURB_FAMILY::SA:
+    switch (kindTurbModel) {
+      //development models
+      case TURB_MODEL::TURBDEV:
+        turbSolver = new CTurbTURBDEVSolver(geometry, config, iMGLevel, solver[FLOW_SOL]->GetFluidModel());
+        solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
+        turbSolver->Postprocessing(geometry, solver, config, iMGLevel);
+        solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
+        break;
+      case TURB_MODEL::DUMMYTURB:
+        turbSolver = new CTurbDUMMYTURBSolver(geometry, config, iMGLevel, solver[FLOW_SOL]->GetFluidModel());
+        solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
+        turbSolver->Postprocessing(geometry, solver, config, iMGLevel);
+        solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
+        break;   
+      //one equation models     
+      case TURB_MODEL::SA:
         turbSolver = new CTurbSASolver(geometry, config, iMGLevel, solver[FLOW_SOL]->GetFluidModel());
         solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
         turbSolver->Postprocessing(geometry, solver, config, iMGLevel);
         break;
-      case TURB_FAMILY::KW:
+      case TURB_MODEL::NUT92:
+        // turbSolver = new CTurbNut92Solver(geometry, config, iMGLevel, solver[FLOW_SOL]->GetFluidModel());
+        // solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
+        // turbSolver->Postprocessing(geometry, solver, config, iMGLevel);
+        // solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);  
+        SU2_MPI::Error("Trying to create TurbSolver container but TURB_MODEL=NUT92 option is not available.", CURRENT_FUNCTION);              
+        break;
+      case TURB_MODEL::WA:
+        // turbSolver = new CTurbWASolver(geometry, config, iMGLevel, solver[FLOW_SOL]->GetFluidModel());
+        // solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
+        // turbSolver->Postprocessing(geometry, solver, config, iMGLevel);
+        // solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
+        SU2_MPI::Error("Trying to create TurbSolver container but TURB_MODEL=WA option is not available.", CURRENT_FUNCTION);
+        break;
+      //two equation models
+      case TURB_MODEL::BSL:
+        // turbSolver = new CTurbKEZFSolver(geometry, config, iMGLevel, solver[FLOW_SOL]->GetFluidModel());
+        // solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
+        // turbSolver->Postprocessing(geometry, solver, config, iMGLevel);
+        // solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
+        SU2_MPI::Error("Trying to create TurbSolver container but TURB_MODEL=BSL option is not available.", CURRENT_FUNCTION);  
+      case TURB_MODEL::CKE:
+        // turbSolver = new CTurbKEZFSolver(geometry, config, iMGLevel, solver[FLOW_SOL]->GetFluidModel());
+        // solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
+        // turbSolver->Postprocessing(geometry, solver, config, iMGLevel);
+        // solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
+        SU2_MPI::Error("Trying to create TurbSolver container but TURB_MODEL=CKE option is not available.", CURRENT_FUNCTION);         
+      case TURB_MODEL::KKL:
+        // turbSolver = new CTurbKKLSolver(geometry, config, iMGLevel, solver[FLOW_SOL]->GetFluidModel());
+        // solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
+        // turbSolver->Postprocessing(geometry, solver, config, iMGLevel);
+        // solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
+        SU2_MPI::Error("Trying to create TurbSolver container but TURB_MODEL=KKL option is not available.", CURRENT_FUNCTION);            
+      case TURB_MODEL::SST:
         turbSolver = new CTurbSSTSolver(geometry, config, iMGLevel);
         solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
         turbSolver->Postprocessing(geometry, solver, config, iMGLevel);
         solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
+        break;  
+      case TURB_MODEL::WKW:
+        // turbSolver = new CTurbWKWSolver(geometry, config, iMGLevel, solver[FLOW_SOL]->GetFluidModel());
+        // solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
+        // turbSolver->Postprocessing(geometry, solver, config, iMGLevel);
+        // solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
+        SU2_MPI::Error("Trying to create TurbSolver container but TURB_MODEL=WKW option is not available.", CURRENT_FUNCTION);                      
+      //three equation models 
+      case TURB_MODEL::KERT:
+        // turbSolver = new CTurbKERTSolver(geometry, config, iMGLevel, solver[FLOW_SOL]->GetFluidModel());
+        // solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
+        // turbSolver->Postprocessing(geometry, solver, config, iMGLevel);
+        // solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
+        SU2_MPI::Error("Trying to create TurbSolver container but TURB_MODEL=KERT option is not available.", CURRENT_FUNCTION);      
         break;
-      case TURB_FAMILY::NONE:
+      case TURB_MODEL::KEZF:
+        // turbSolver = new CTurbKEZFSolver(geometry, config, iMGLevel, solver[FLOW_SOL]->GetFluidModel());
+        // solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
+        // turbSolver->Postprocessing(geometry, solver, config, iMGLevel);
+        // solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
+        SU2_MPI::Error("Trying to create TurbSolver container but TURB_MODEL=KEZF option is not available.", CURRENT_FUNCTION);      
+        break;        
+      case TURB_MODEL::NONE:
         SU2_MPI::Error("Trying to create TurbSolver container but TURB_MODEL=NONE.", CURRENT_FUNCTION);
         break;
     }
