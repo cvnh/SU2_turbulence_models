@@ -52,7 +52,7 @@ Models and validation cases to be based on NASA Turbulence Model resources:
 - 1.1   Code change to accept new models
 - 1.2   Implementation of dummy and development models 
 - 1.3   Validation cases 
-- 1.4   Automation of validation cases (Orbit?)
+- 1.4   Automation of check cases 
 
 ## Details
 
