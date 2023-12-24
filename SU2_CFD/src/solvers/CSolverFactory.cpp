@@ -389,18 +389,21 @@ CSolver* CSolverFactory::CreateTurbSolver(TURB_MODEL kindTurbModel, CSolver **so
         // turbSolver->Postprocessing(geometry, solver, config, iMGLevel);
         // solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
         SU2_MPI::Error("Trying to create TurbSolver container but TURB_MODEL=BSL option is not available.", CURRENT_FUNCTION);  
+        break;
       case TURB_MODEL::CKE:
         // turbSolver = new CTurbKEZFSolver(geometry, config, iMGLevel, solver[FLOW_SOL]->GetFluidModel());
         // solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
         // turbSolver->Postprocessing(geometry, solver, config, iMGLevel);
         // solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
         SU2_MPI::Error("Trying to create TurbSolver container but TURB_MODEL=CKE option is not available.", CURRENT_FUNCTION);         
+        break;
       case TURB_MODEL::KKL:
         // turbSolver = new CTurbKKLSolver(geometry, config, iMGLevel, solver[FLOW_SOL]->GetFluidModel());
         // solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
         // turbSolver->Postprocessing(geometry, solver, config, iMGLevel);
         // solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
         SU2_MPI::Error("Trying to create TurbSolver container but TURB_MODEL=KKL option is not available.", CURRENT_FUNCTION);            
+        break;
       case TURB_MODEL::SST:
         turbSolver = new CTurbSSTSolver(geometry, config, iMGLevel);
         solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
@@ -413,6 +416,7 @@ CSolver* CSolverFactory::CreateTurbSolver(TURB_MODEL kindTurbModel, CSolver **so
         // turbSolver->Postprocessing(geometry, solver, config, iMGLevel);
         // solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
         SU2_MPI::Error("Trying to create TurbSolver container but TURB_MODEL=WKW option is not available.", CURRENT_FUNCTION);                      
+        break;
       //three equation models 
       case TURB_MODEL::KERT:
         // turbSolver = new CTurbKERTSolver(geometry, config, iMGLevel, solver[FLOW_SOL]->GetFluidModel());
