@@ -719,12 +719,30 @@ private:
 
   unsigned short nConfig_Files;       /*!< \brief Number of config files for multiphysics problems. */
   string *Config_Filenames;           /*!< \brief List of names for configuration files. */
-  SST_OPTIONS *SST_Options;           /*!< \brief List of modifications/corrections/versions of SST turbulence model.*/
-  SA_OPTIONS *SA_Options;             /*!< \brief List of modifications/corrections/versions of SA turbulence model.*/
-  LM_OPTIONS *LM_Options;             /*!< \brief List of modifications/corrections/versions of SA turbulence model.*/
+  
+  BSL_OPTIONS    *BSL_Options;        /*!< \brief List of modifications/corrections/versions of BSL turbulence model.*/
+  CKE_OPTIONS    *CKE_Options;        /*!< \brief List of modifications/corrections/versions of CKE turbulence model.*/
+  KERT_OPTIONS   *KERT_Options;       /*!< \brief List of modifications/corrections/versions of KERT turbulence model.*/
+  KEZF_OPTIONS   *KEZF_Options;       /*!< \brief List of modifications/corrections/versions of KEZF turbulence model.*/
+  KKL_OPTIONS    *KKL_Options;        /*!< \brief List of modifications/corrections/versions of KKL turbulence model.*/
+  NUT92_OPTIONS  *NUT92_Options;      /*!< \brief List of modifications/corrections/versions of NUT-92 turbulence model.*/
+  SST_OPTIONS    *SST_Options;        /*!< \brief List of modifications/corrections/versions of SST turbulence model.*/
+  SA_OPTIONS     *SA_Options;         /*!< \brief List of modifications/corrections/versions of SA turbulence model.*/
+  WA_OPTIONS     *WA_Options;         /*!< \brief List of modifications/corrections/versions of WA turbulence model.*/
+  WKW_OPTIONS    *WKW_Options;        /*!< \brief List of modifications/corrections/versions of WKW turbulence model.*/
+  LM_OPTIONS     *LM_Options;         /*!< \brief List of modifications/corrections/versions of LM transition model.*/
+  unsigned short nBSL_Options;        /*!< \brief Number of SST options specified. */
+  unsigned short nCKE_Options;        /*!< \brief Number of SST options specified. */
+  unsigned short nKERT_Options;        /*!< \brief Number of SST options specified. */
+  unsigned short nKEZF_Options;        /*!< \brief Number of SST options specified. */
+  unsigned short nKKL_Options;        /*!< \brief Number of SST options specified. */
+  unsigned short nNUT92_Options;        /*!< \brief Number of SST options specified. */
   unsigned short nSST_Options;        /*!< \brief Number of SST options specified. */
   unsigned short nSA_Options;         /*!< \brief Number of SA options specified. */
-  unsigned short nLM_Options;         /*!< \brief Number of SA options specified. */
+  unsigned short nWA_Options;        /*!< \brief Number of WKW options specified. */
+  unsigned short nWKW_Options;        /*!< \brief Number of WKW options specified. */
+  unsigned short nLM_Options;         /*!< \brief Number of LM options specified. */
+  
   WALL_FUNCTIONS  *Kind_WallFunctions;        /*!< \brief The kind of wall function to use for the corresponding markers. */
   unsigned short  **IntInfo_WallFunctions;    /*!< \brief Additional integer information for the wall function markers. */
   su2double       **DoubleInfo_WallFunctions; /*!< \brief Additional double information for the wall function markers. */
@@ -1161,8 +1179,16 @@ private:
   unsigned short nScreenOutput,   /*!< \brief Number of screen output variables (max: 6). */
   nHistoryOutput, nVolumeOutput;  /*!< \brief Number of variables printed to the history file. */
   bool Multizone_Residual;        /*!< \brief Determines if memory should be allocated for the multizone residual. */
-  SST_ParsedOptions sstParsedOptions; /*!< \brief Additional parameters for the SST turbulence model. */
-  SA_ParsedOptions saParsedOptions;   /*!< \brief Additional parameters for the SA turbulence model. */
+  BSL_ParsedOptions bslParsedOptions;     /*!< \brief Additional parameters for the BSL turbulence model. */
+  CKE_ParsedOptions ckeParsedOptions;     /*!< \brief Additional parameters for the CKE turbulence model. */
+  KERT_ParsedOptions kertParsedOptions;   /*!< \brief Additional parameters for the KERT turbulence model. */
+  KEZF_ParsedOptions kezfParsedOptions;   /*!< \brief Additional parameters for the KEZF turbulence model. */
+  KKL_ParsedOptions kklParsedOptions;     /*!< \brief Additional parameters for the KKL turbulence model. */
+  NUT92_ParsedOptions nut92ParsedOptions; /*!< \brief Additional parameters for the NUT92 turbulence model. */
+  SST_ParsedOptions sstParsedOptions;     /*!< \brief Additional parameters for the SST turbulence model. */
+  SA_ParsedOptions saParsedOptions;       /*!< \brief Additional parameters for the SA turbulence model. */
+  WA_ParsedOptions waParsedOptions;       /*!< \brief Additional parameters for the WA turbulence model.*/
+  WKW_ParsedOptions wkwParsedOptions;     /*!< \brief Additional parameters for the WKW turbulence model.*/
   LM_ParsedOptions lmParsedOptions;   /*!< \brief Additional parameters for the LM transition model. */
   su2double uq_delta_b;         /*!< \brief Parameter used to perturb eigenvalues of Reynolds Stress Matrix */
   unsigned short eig_val_comp;  /*!< \brief Parameter used to determine type of eigenvalue perturbation */
@@ -9790,16 +9816,22 @@ public:
   unsigned long GetGrad_Linear_Solver_Iter(void) const { return Grad_Linear_Solver_Iter; }
 
   /*!
+   * \brief Get parsed SA option data structure.
+   * \return SA option data structure.
+   */
+  SA_ParsedOptions GetSAParsedOptions() const { return saParsedOptions; }
+
+  /*!
    * \brief Get parsed SST option data structure.
    * \return SST option data structure.
    */
   SST_ParsedOptions GetSSTParsedOptions() const { return sstParsedOptions; }
 
   /*!
-   * \brief Get parsed SA option data structure.
-   * \return SA option data structure.
+   * \brief Get parsed WKW option data structure.
+   * \return WKW option data structure.
    */
-  SA_ParsedOptions GetSAParsedOptions() const { return saParsedOptions; }
+  WKW_ParsedOptions GetWKWParsedOptions() const { return wkwParsedOptions; }
 
   /*!
    * \brief Get parsed LM option data structure.

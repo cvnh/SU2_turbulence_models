@@ -1097,11 +1097,26 @@ void CConfig::SetConfig_Options() {
   addMathProblemOption("MATH_PROBLEM", ContinuousAdjoint, false, DiscreteAdjoint, discAdjDefault, Restart_Flow, discAdjDefault);
   /*!\brief KIND_TURB_MODEL \n DESCRIPTION: Specify turbulence model \n Options: see \link Turb_Model_Map \endlink \n DEFAULT: NONE \ingroup Config*/
   addEnumOption("KIND_TURB_MODEL", Kind_Turb_Model, Turb_Model_Map, TURB_MODEL::NONE);
+  /*!\brief _OPTIONS \n DESCRIPTION: Specify BSL turbulence model options/corrections. \n Options: see \link BSL_Options_Map \endlink \n DEFAULT: NONE \ingroup Config*/
+  addEnumListOption("BSL_OPTIONS", nBSL_Options, BSL_Options, BSL_Options_Map);  
+  /*!\brief _OPTIONS \n DESCRIPTION: Specify  turbulence model options/corrections. \n Options: see \link CKE_Options_Map \endlink \n DEFAULT: NONE \ingroup Config*/
+  addEnumListOption("CKE_OPTIONS", nCKE_Options, CKE_Options, CKE_Options_Map);  
+  /*!\brief _OPTIONS \n DESCRIPTION: Specify  turbulence model options/corrections. \n Options: see \link KERT_Options_Map \endlink \n DEFAULT: NONE \ingroup Config*/
+  addEnumListOption("KERT_OPTIONS", nKERT_Options, KERT_Options, KERT_Options_Map);  
+  /*!\brief _OPTIONS \n DESCRIPTION: Specify  turbulence model options/corrections. \n Options: see \link KEZF_Options_Map \endlink \n DEFAULT: NONE \ingroup Config*/
+  addEnumListOption("KEZF_OPTIONS", nKEZF_Options, KEZF_Options, KEZF_Options_Map);  
+  /*!\brief _OPTIONS \n DESCRIPTION: Specify  turbulence model options/corrections. \n Options: see \link KKL_Options_Map \endlink \n DEFAULT: NONE \ingroup Config*/
+  addEnumListOption("KKL_OPTIONS", nKKL_Options, KKL_Options, KKL_Options_Map);  
+  /*!\brief _OPTIONS \n DESCRIPTION: Specify  turbulence model options/corrections. \n Options: see \link NUT92_Options_Map \endlink \n DEFAULT: NONE \ingroup Config*/
+  addEnumListOption("NUT92_OPTIONS", nNUT92_Options, NUT92_Options, NUT92_Options_Map);
   /*!\brief SST_OPTIONS \n DESCRIPTION: Specify SST turbulence model options/corrections. \n Options: see \link SST_Options_Map \endlink \n DEFAULT: NONE \ingroup Config*/
   addEnumListOption("SST_OPTIONS", nSST_Options, SST_Options, SST_Options_Map);
   /*!\brief SST_OPTIONS \n DESCRIPTION: Specify SA turbulence model options/corrections. \n Options: see \link SA_Options_Map \endlink \n DEFAULT: NONE \ingroup Config*/
   addEnumListOption("SA_OPTIONS", nSA_Options, SA_Options, SA_Options_Map);
-
+  /*!\brief WA_OPTIONS \n DESCRIPTION: Specify WA turbulence model options/corrections. \n Options: see \link WA_Options_Map \endlink \n DEFAULT: NONE \ingroup Config*/
+  addEnumListOption("WA_OPTIONS", nWA_Options, WA_Options, WA_Options_Map);
+  /*!\brief WKW_OPTIONS \n DESCRIPTION: Specify WKW turbulence model options/corrections. \n Options: see \link WA_Options_Map \endlink \n DEFAULT: NONE \ingroup Config*/
+  addEnumListOption("WKW_OPTIONS", nWKW_Options, WKW_Options, WKW_Options_Map);
   /*!\brief KIND_TRANS_MODEL \n DESCRIPTION: Specify transition model OPTIONS: see \link Trans_Model_Map \endlink \n DEFAULT: NONE \ingroup Config*/
   addEnumOption("KIND_TRANS_MODEL", Kind_Trans_Model, Trans_Model_Map, TURB_TRANS_MODEL::NONE);
   /*!\brief SST_OPTIONS \n DESCRIPTION: Specify LM transition model options/correlations. \n Options: see \link LM_Options_Map \endlink \n DEFAULT: NONE \ingroup Config*/
@@ -3441,11 +3456,20 @@ void CConfig::SetPostprocessing(SU2_COMPONENT val_software, unsigned short val_i
     SU2_MPI::Error("A turbulence model must be specified with KIND_TURB_MODEL if SOLVER= INC_RANS", CURRENT_FUNCTION);
   }
 
-  /*--- Postprocess SST_OPTIONS into structure. ---*/
-  if (Kind_Turb_Model == TURB_MODEL::SST) {
-    sstParsedOptions = ParseSSTOptions(SST_Options, nSST_Options, rank);
-  } else if (Kind_Turb_Model == TURB_MODEL::SA) {
-    saParsedOptions = ParseSAOptions(SA_Options, nSA_Options, rank);
+  /*--- Postprocess turbulence models into structure. ---*/
+  switch (Kind_Turb_Model)
+  {
+    case TURB_MODEL::BSL   : bslParsedOptions   =   ParseBSLOptions(  BSL_Options,   nBSL_Options, rank); break;
+    case TURB_MODEL::CKE   : ckeParsedOptions   =   ParseCKEOptions(  CKE_Options,   nCKE_Options, rank); break;
+    case TURB_MODEL::KERT  : kertParsedOptions  =  ParseKERTOptions( KERT_Options,  nKERT_Options, rank); break;
+    case TURB_MODEL::KEZF  : kezfParsedOptions  =  ParseKEZFOptions( KEZF_Options,  nKEZF_Options, rank); break;
+    case TURB_MODEL::KKL   : kklParsedOptions   =   ParseKKLOptions(  KKL_Options,   nKKL_Options, rank); break;
+    case TURB_MODEL::NUT92 : nut92ParsedOptions = ParseNUT92Options(NUT92_Options, nNUT92_Options, rank); break;
+    case TURB_MODEL::SA    : saParsedOptions    =    ParseSAOptions(   SA_Options,    nSA_Options, rank); break;
+    case TURB_MODEL::SST   : sstParsedOptions   =   ParseSSTOptions(  SST_Options,   nSST_Options, rank); break;
+    case TURB_MODEL::WA    : waParsedOptions    =    ParseWAOptions(   WA_Options,    nWA_Options, rank); break;
+    case TURB_MODEL::WKW   : wkwParsedOptions   =   ParseWKWOptions(  WKW_Options,   nWKW_Options, rank); break;
+    //default: error?
   }
 
   /*--- Check if turbulence model can be used for AXISYMMETRIC case---*/
@@ -6072,7 +6096,25 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
         if (Kind_Regime == ENUM_REGIME::INCOMPRESSIBLE) cout << "Incompressible RANS equations." << endl;
         cout << "Turbulence model: ";
         switch (Kind_Turb_Model) {
+
+          //idea: give short (from turbmodels nomenclature) description, e.g. Wilcox2006m-klim in addition to detailed
+
           case TURB_MODEL::NONE: break;
+          case TURB_MODEL::BSL:
+            cout << "Menter Baseline two-equation Model";
+            break;
+          case TURB_MODEL::CKE:
+            cout << "Chien k-epsilon";
+            break;
+          case TURB_MODEL::KERT:
+            cout << "k-e-Rt";
+            break;
+          case TURB_MODEL::KEZF:
+            cout << "k-e-Zf";
+            break;
+          case TURB_MODEL::NUT92:
+            cout << "Nut-92";
+            break;
           case TURB_MODEL::SA:
             switch (saParsedOptions.version) {
               case SA_OPTIONS::NEG:
@@ -6115,6 +6157,28 @@ void CConfig::SetOutput(SU2_COMPONENT val_software, unsigned short val_izone) {
                 cout << " with no production modification";
                 break;
             }
+            cout << "." << endl;
+            break;
+          case TURB_MODEL::WA:
+            cout << "Wray Agarwal";
+            break;
+          case TURB_MODEL::WKW:
+            cout << "Wilcox k-omega";
+            switch (wkwParsedOptions.version) {
+              case WKW_OPTIONS::V1988:  cout <<" (1998)";          break;
+              case WKW_OPTIONS::V1988m: cout <<" (1998) modified"; break;
+              case WKW_OPTIONS::V1998:  cout <<" (1998)";          break;
+              case WKW_OPTIONS::V1998m: cout <<" (1998) modified"; break;
+              case WKW_OPTIONS::V2006:  cout <<" (1998)";          break;
+              case WKW_OPTIONS::V2006m: cout <<" (1998) modified"; break;
+            }
+            if (wkwParsedOptions.klim)  cout << " with k-equation limiter";
+            switch (wkwParsedOptions.production) {
+              case WKW_OPTIONS::KL:     cout << " with Kato-Lander production"; break;
+              case WKW_OPTIONS::V:      cout << " with Vorticity production";   break;
+            }
+            
+            if (wkwParsedOptions.nopope) cout << " without Pope correction";
             cout << "." << endl;
             break;
         }

@@ -56,8 +56,13 @@ enum class SUB_SOLVER_TYPE {
   DG_NAVIER_STOKES,        /*!< \brief Higher-order DG Navier-Stokes solver*/
   HEAT,                    /*!< \brief Heat solver */
   TRANSITION,              /*!< \brief Transition model solver*/
-  TURB_DEV,                /*!< \brief Development turbulence model solver*/
-  TURB_DUMMY,              /*!< \brief Dummy turbulence model solver*/
+  TURB_BSL,                /*!< \brief Menter BST turbulence model solver*/
+  TURB_CKE,                /*!< \brief Chien k-epsilon turbulence model solver*/
+  TURB_KERT,               /*!< \brief k-epsilon-RT turbulence model solver*/
+  TURB_KEZF,               /*!< \brief k-epsilon zeta-F turbulence model solver*/
+  TURB_KKL,                /*!< \brief k-kL turbulence model solver*/
+  //TURB_DEV,                /*!< \brief Development turbulence model solver*/
+  //TURB_DUMMY,              /*!< \brief Dummy turbulence model solver*/
   TURB_NUT92,              /*!< \brief nuT-92 turbulence model solver*/
   TURB_SA,                 /*!< \brief SA turbulence model solver */
   TURB_SST,                /*!< \brief SST turbulence model solver */

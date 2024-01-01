@@ -33,12 +33,13 @@
 #include "../../include/solvers/CIncNSSolver.hpp"
 #include "../../include/solvers/CNEMOEulerSolver.hpp"
 #include "../../include/solvers/CNEMONSSolver.hpp"
-#include "../../include/solvers/CTurbTURBDEVSolver.hpp"
-#include "../../include/solvers/CTurbDUMMYTURBSolver.hpp"
-#include "../../include/solvers/CTurbNut92Solver.hpp"
+//#include "../../include/solvers/CTurbTURBDEVSolver.hpp"
+//#include "../../include/solvers/CTurbDUMMYTURBSolver.hpp"
+// #include "../../include/solvers/CTurbNut92Solver.hpp"
 #include "../../include/solvers/CTurbSASolver.hpp"
 #include "../../include/solvers/CTurbSSTSolver.hpp"
-#include "../../include/solvers/CTurbWASolver.hpp"
+// #include "../../include/solvers/CTurbWASolver.hpp"
+#include "../../include/solvers/CTurbWKWSolver.hpp"
 #include "../../include/solvers/CTransLMSolver.hpp"
 #include "../../include/solvers/CAdjEulerSolver.hpp"
 #include "../../include/solvers/CAdjNSSolver.hpp"
@@ -307,8 +308,8 @@ CSolver* CSolverFactory::CreateSubSolver(SUB_SOLVER_TYPE kindSolver, CSolver **s
       metaData.integrationType = INTEGRATION_TYPE::DEFAULT;
       break;
     case SUB_SOLVER_TYPE::TURB:
-    case SUB_SOLVER_TYPE::TURB_DEV:
-    case SUB_SOLVER_TYPE::TURB_DUMMY:
+    //case SUB_SOLVER_TYPE::TURB_DEV:
+    //case SUB_SOLVER_TYPE::TURB_DUMMY:
     case SUB_SOLVER_TYPE::TURB_NUT92:
     case SUB_SOLVER_TYPE::TURB_SA:
     case SUB_SOLVER_TYPE::TURB_SST:
@@ -350,18 +351,18 @@ CSolver* CSolverFactory::CreateTurbSolver(TURB_MODEL kindTurbModel, CSolver **so
   if (!adjoint){
     switch (kindTurbModel) {
       //development models
-      case TURB_MODEL::TURBDEV:
-        turbSolver = new CTurbTURBDEVSolver(geometry, config, iMGLevel, solver[FLOW_SOL]->GetFluidModel());
-        solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
-        turbSolver->Postprocessing(geometry, solver, config, iMGLevel);
-        solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
-        break;
-      case TURB_MODEL::DUMMYTURB:
-        turbSolver = new CTurbDUMMYTURBSolver(geometry, config, iMGLevel, solver[FLOW_SOL]->GetFluidModel());
-        solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
-        turbSolver->Postprocessing(geometry, solver, config, iMGLevel);
-        solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
-        break;   
+      // case TURB_MODEL::TURBDEV:
+      //   turbSolver = new CTurbTURBDEVSolver(geometry, config, iMGLevel, solver[FLOW_SOL]->GetFluidModel());
+      //   solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
+      //   turbSolver->Postprocessing(geometry, solver, config, iMGLevel);
+      //   solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
+      //   break;
+      // case TURB_MODEL::DUMMYTURB:
+      //   turbSolver = new CTurbDUMMYTURBSolver(geometry, config, iMGLevel, solver[FLOW_SOL]->GetFluidModel());
+      //   solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
+      //   turbSolver->Postprocessing(geometry, solver, config, iMGLevel);
+      //   solver[FLOW_SOL]->Preprocessing(geometry, solver, config, iMGLevel, NO_RK_ITER, RUNTIME_FLOW_SYS, false);
+      //   break;   
       //one equation models     
       case TURB_MODEL::SA:
         turbSolver = new CTurbSASolver(geometry, config, iMGLevel, solver[FLOW_SOL]->GetFluidModel());

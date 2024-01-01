@@ -945,7 +945,7 @@ static const MapType<std::string, LIMITER> Limiter_Map = {
  */
 enum class TURB_MODEL {
   NONE,      /*!< \brief No turbulence model. */
-  BSL,       /*!< \brief Kind of turbulence model (Menter BST).*/
+  BSL,       /*!< \brief Kind of turbulence model (Menter BSL).*/
   CKE,       /*!< \brief Kind of turbulence model (Chien k-epsilon).*/
   KERT,      /*!< \brief Kind of turbulence model (k-epsilon Rt).*/
   KEZF,      /*!< \brief Kind of turbulence model (k-epsilon k-epsilon-zeta-f).*/
@@ -955,8 +955,8 @@ enum class TURB_MODEL {
   SST,       /*!< \brief Kind of Turbulence Model (Menter SST). */
   WA,        /*!< \brief Kind of Turbulence Model (Wray-Agarwal).*/
   WKW,       /*!< \brief Kind of Turbulence Model (Wilcox k-omega).*/
-  TURBDEV,   /*!< \brief Kind of Turbulence Model (Development)*/
-  DUMMYTURB  /*!< \brief Kind of Turbulence Model (Dummy model - no turbulence)*/
+  //TURBDEV,   /*!< \brief Kind of Turbulence Model (Development)*/
+  //DUMMYTURB  /*!< \brief Kind of Turbulence Model (Dummy model - no turbulence)*/
 };
 static const MapType<std::string, TURB_MODEL> Turb_Model_Map = {
   MakePair("NONE", TURB_MODEL::NONE)
@@ -970,8 +970,8 @@ static const MapType<std::string, TURB_MODEL> Turb_Model_Map = {
   MakePair("SST", TURB_MODEL::SST)
   MakePair("WA", TURB_MODEL::WA)
   MakePair("WKW", TURB_MODEL::WKW)
-  MakePair("DEV", TURB_MODEL::TURBDEV)
-  MakePair("DUMMYTURB", TURB_MODEL::DUMMYTURB)
+  // MakePair("DEV", TURB_MODEL::TURBDEV)
+  // MakePair("DUMMYTURB", TURB_MODEL::DUMMYTURB)
 };
 
 /*!
@@ -979,8 +979,8 @@ static const MapType<std::string, TURB_MODEL> Turb_Model_Map = {
  */
 enum class TURB_FAMILY {
   NONE,   /*!< \brief No turbulence model. */
-  TURBDEV,/*!< \brief development turbulence model <- for testing and debug only!*/
-  DUMMYTURB, /*!< \brief developpment (no) turbulence model <- for testing and debug only!*/
+  //TURBDEV,/*!< \brief development turbulence model <- for testing and debug only!*/
+  //DUMMYTURB, /*!< \brief developpment (no) turbulence model <- for testing and debug only!*/
   NUT92,  /*!< \brief Nu tau 92 models. */
   SA,     /*!< \brief Spalart-Allmaras models. */
   KKL,    /*!< \brief K-KL models. */
@@ -1014,10 +1014,10 @@ inline TURB_FAMILY TurbModelFamily(TURB_MODEL model) {
       return TURB_FAMILY::KE;
     case TURB_MODEL::KEZF:
       return TURB_FAMILY::KE;      
-    case TURB_MODEL::DUMMYTURB:
-      return TURB_FAMILY::DUMMYTURB;
-    case TURB_MODEL::TURBDEV:
-      return TURB_FAMILY::TURBDEV;
+    // case TURB_MODEL::DUMMYTURB:
+    //   return TURB_FAMILY::DUMMYTURB;
+    // case TURB_MODEL::TURBDEV:
+    //   return TURB_FAMILY::TURBDEV;
   }
   return TURB_FAMILY::NONE;
 }
@@ -1643,9 +1643,8 @@ inline SST_ParsedOptions ParseSSTOptions(const SST_OPTIONS *SST_Options, unsigne
   return SSTParsedOptions;
 }
 
-
 /*!
- * \brief WKW Turbulence Options
+ * \brief WKW Turbulence Model Options
  */
 enum class WKW_OPTIONS {
     NONE,     /*!< \brief No option / default. */
@@ -1659,7 +1658,7 @@ enum class WKW_OPTIONS {
     NOPOPE,   /*!< \bvief Wilcox k-omega option: no Pope correction.*/
     LRN,      /*!< \brief Wilcox k-omega option: low Reynolds number version.*/
     KLIM,     /*!< \brief Wilcox k-omega option: .*/
-    V         /*!< \brief Wilcox k-omega option: .*/
+    V         /*!< \brief Wilcox k-omega option: vorticity production.*/
 };
 
 static const MapType<std::string, WKW_OPTIONS> WKW_Options_Map = {
@@ -1683,6 +1682,7 @@ static const MapType<std::string, WKW_OPTIONS> WKW_Options_Map = {
 struct WKW_ParsedOptions {
   //WKW_OPTIONS boundary_condition = WKW_OPTIONS::NONE;  /*!< \brief  model. */
   WKW_OPTIONS version = WKW_OPTIONS::NONE;
+  WKW_OPTIONS production = WKW_OPTIONS::NONE;
   bool nopope = false;
   bool lrn    = false;
   bool kl     = false;
@@ -1748,25 +1748,25 @@ inline WKW_ParsedOptions ParseWKWOptions(const WKW_OPTIONS *WKW_Options, unsigne
     WKWParsedOptions.version  = WKW_OPTIONS::V2006;
   } else {
     if (wkw2006)  WKWParsedOptions.version = WKW_OPTIONS::V2006;
-    if (wkw2006m) WKWParsedOptions.version = WKW_OPTIONS::V2006;
+    if (wkw2006m) WKWParsedOptions.version = WKW_OPTIONS::V2006m;
     if (wkw1998)  WKWParsedOptions.version = WKW_OPTIONS::V1998;
     if (wkw1998m) WKWParsedOptions.version = WKW_OPTIONS::V1998m;
     if (wkw1988)  WKWParsedOptions.version = WKW_OPTIONS::V1988;
     if (wkw1988m) WKWParsedOptions.version = WKW_OPTIONS::V1988m;
   }
 
-  if (wkw_kl)     WKWParsedOptions.kl     = true;
-  if (wkw_klim)   WKWParsedOptions.klim   = true;
-  if (wkw_lrn)    WKWParsedOptions.lrn    = true;
-  if (wkw_nopope) WKWParsedOptions.nopope = true;
-  if (wkw_v)      WKWParsedOptions.v      = true;
+  if (wkw_kl)     {WKWParsedOptions.kl     = true; WKWParsedOptions.production = WKW_OPTIONS::KL;}
+  if (wkw_klim)    WKWParsedOptions.klim   = true;
+  if (wkw_lrn)     WKWParsedOptions.lrn    = true;
+  if (wkw_nopope)  WKWParsedOptions.nopope = true;
+  if (wkw_v)      {WKWParsedOptions.v      = true; WKWParsedOptions.production = WKW_OPTIONS::V;}
 
   //unavailable models
   if (wkw_kl)     SU2_MPI::Error("Kato-Launder correction for Wilcox k-omega turbulence model not available.", CURRENT_FUNCTION);
   if (wkw_klim)   SU2_MPI::Error("Production limiter for Wilcox k-omega turbulence model not available.", CURRENT_FUNCTION);
   if (wkw_lrn)    SU2_MPI::Error("Low Reynolds Wilcox k-omega turbulence model not available.", CURRENT_FUNCTION);
   if (wkw_nopope) SU2_MPI::Error("No Pope correction for Wilcox k-omega turbulence model not available.", CURRENT_FUNCTION);
-  if (wkw_v)      SU2_MPI::Error("Voorticity source term for Wilcox k-omega turbulence model not available.", CURRENT_FUNCTION);  
+  if (wkw_v)      SU2_MPI::Error("Vorticity source term for Wilcox k-omega turbulence model not available.", CURRENT_FUNCTION);  
   if (wkw2006)    SU2_MPI::Error("Wilcox (2006)k-omega turbulence model not available.", CURRENT_FUNCTION);
   if (wkw2006m)   SU2_MPI::Error("Wilcox (2006) modified k-omega turbulence model not available.", CURRENT_FUNCTION);
   if (wkw1998)    SU2_MPI::Error("Wilcox (1998)k-omega turbulence model not available.", CURRENT_FUNCTION);
@@ -1872,110 +1872,110 @@ inline KEZF_ParsedOptions ParseKEZFOptions(const KEZF_OPTIONS *KEZF_Options, uns
 
 
 
-/*!
- * \brief Dummy Turbulence Options
- */
-enum class DUMMYTURB_OPTIONS {
-    NONE,     /*!< \brief No option / default. */
-    BC_SA,    /*!< \brief Boundary conditions from SA.*/
-    BC_SST,   /*!< \brief Boundary conditions from SST.*/
-};
-static const MapType<std::string, DUMMYTURB_OPTIONS> DUMMYTURB_Options_Map = {
-  MakePair("NONE", DUMMYTURB_OPTIONS::NONE)
-  MakePair("BC_SA", DUMMYTURB_OPTIONS::BC_SA)
-  MakePair("BC_SST", DUMMYTURB_OPTIONS::BC_SST)
-};
+// /*!
+//  * \brief Dummy Turbulence Options
+//  */
+// enum class DUMMYTURB_OPTIONS {
+//     NONE,     /*!< \brief No option / default. */
+//     BC_SA,    /*!< \brief Boundary conditions from SA.*/
+//     BC_SST,   /*!< \brief Boundary conditions from SST.*/
+// };
+// static const MapType<std::string, DUMMYTURB_OPTIONS> DUMMYTURB_Options_Map = {
+//   MakePair("NONE", DUMMYTURB_OPTIONS::NONE)
+//   MakePair("BC_SA", DUMMYTURB_OPTIONS::BC_SA)
+//   MakePair("BC_SST", DUMMYTURB_OPTIONS::BC_SST)
+// };
 
 
-/*!
- * \brief Structure containing parsed dummy turbulence options.
- */
-struct DUMMYTURB_ParsedOptions {
-  bool bcsa = false;  /*!< \brief  model. */
-  bool bcsst = false;  /*!< \brief  model. */
-  bool bcdefault = true; /*!< \brief  model. */
-};
+// /*!
+//  * \brief Structure containing parsed dummy turbulence options.
+//  */
+// struct DUMMYTURB_ParsedOptions {
+//   bool bcsa = false;  /*!< \brief  model. */
+//   bool bcsst = false;  /*!< \brief  model. */
+//   bool bcdefault = true; /*!< \brief  model. */
+// };
 
-/*!
- * \brief Function to parse dummy turb options.
- * \param[in] DUMMYTURB_Options - Selected dummy turb option from config.
- * \param[in] nDUMMYTURB_Options - Number of options selected.
- * \param[in] rank - MPI rank.
- * \return Struct with dummy turb options.
- */
-inline DUMMYTURB_ParsedOptions ParseDUMMYTURBOptions(const DUMMYTURB_OPTIONS *DUMMYTURB_Options, unsigned short nDUMMYTURB_Options, int rank) {
-  DUMMYTURB_ParsedOptions DUMMYTURBParsedOptions;
+// /*!
+//  * \brief Function to parse dummy turb options.
+//  * \param[in] DUMMYTURB_Options - Selected dummy turb option from config.
+//  * \param[in] nDUMMYTURB_Options - Number of options selected.
+//  * \param[in] rank - MPI rank.
+//  * \return Struct with dummy turb options.
+//  */
+// inline DUMMYTURB_ParsedOptions ParseDUMMYTURBOptions(const DUMMYTURB_OPTIONS *DUMMYTURB_Options, unsigned short nDUMMYTURB_Options, int rank) {
+//   DUMMYTURB_ParsedOptions DUMMYTURBParsedOptions;
 
-  auto IsPresent = [&](DUMMYTURB_OPTIONS option) {
-    const auto DUMMYTURB_options_end = DUMMYTURB_Options + nDUMMYTURB_Options;
-    return std::find(DUMMYTURB_Options, DUMMYTURB_options_end, option) != DUMMYTURB_options_end;
-  };
+//   auto IsPresent = [&](DUMMYTURB_OPTIONS option) {
+//     const auto DUMMYTURB_options_end = DUMMYTURB_Options + nDUMMYTURB_Options;
+//     return std::find(DUMMYTURB_Options, DUMMYTURB_options_end, option) != DUMMYTURB_options_end;
+//   };
 
-  const bool found_BC_SA = IsPresent(DUMMYTURB_OPTIONS::BC_SA);
-  const bool found_BC_SST = IsPresent(DUMMYTURB_OPTIONS::BC_SST);
+//   const bool found_BC_SA = IsPresent(DUMMYTURB_OPTIONS::BC_SA);
+//   const bool found_BC_SST = IsPresent(DUMMYTURB_OPTIONS::BC_SST);
 
-  if (found_BC_SA && found_BC_SST)
-    SU2_MPI::Error("Two conflicting options (found_BC_SA and found_BC_SST) selected for DUMMYTURB_OPTIONS. Please choose only one.", CURRENT_FUNCTION);
+//   if (found_BC_SA && found_BC_SST)
+//     SU2_MPI::Error("Two conflicting options (found_BC_SA and found_BC_SST) selected for DUMMYTURB_OPTIONS. Please choose only one.", CURRENT_FUNCTION);
 
-  if (found_BC_SA)
-  {
-    DUMMYTURBParsedOptions.bcsa = true;
-    DUMMYTURBParsedOptions.bcdefault = false;
-  }
-  else {
-    if (found_BC_SST)
-    {
-      DUMMYTURBParsedOptions.bcsst = true;
-          DUMMYTURBParsedOptions.bcdefault = false;
-    }
-    // else
-    // {
-    //   DUMMYTURBParsedOptions.bcdefault = true;  //default
-    // }
-  }
+//   if (found_BC_SA)
+//   {
+//     DUMMYTURBParsedOptions.bcsa = true;
+//     DUMMYTURBParsedOptions.bcdefault = false;
+//   }
+//   else {
+//     if (found_BC_SST)
+//     {
+//       DUMMYTURBParsedOptions.bcsst = true;
+//           DUMMYTURBParsedOptions.bcdefault = false;
+//     }
+//     // else
+//     // {
+//     //   DUMMYTURBParsedOptions.bcdefault = true;  //default
+//     // }
+//   }
 
-  return DUMMYTURBParsedOptions;
-}
+//   return DUMMYTURBParsedOptions;
+// }
 
-/*!
- * \brief Dev Turbulence Options
- */
-enum class TURBDEV_OPTIONS {
-    NONE,     /*!< \brief No option / default. */
-    BC_SA,    /*!< \brief Boundary conditions from SA.*/
-    BC_SST,   /*!< \brief Boundary conditions from SST.*/
-};
-static const MapType<std::string, TURBDEV_OPTIONS> TURBDEV_Options_Map = {
-  MakePair("NONE", TURBDEV_OPTIONS::NONE)
-};
+// /*!
+//  * \brief Dev Turbulence Options
+//  */
+// enum class TURBDEV_OPTIONS {
+//     NONE,     /*!< \brief No option / default. */
+//     BC_SA,    /*!< \brief Boundary conditions from SA.*/
+//     BC_SST,   /*!< \brief Boundary conditions from SST.*/
+// };
+// static const MapType<std::string, TURBDEV_OPTIONS> TURBDEV_Options_Map = {
+//   MakePair("NONE", TURBDEV_OPTIONS::NONE)
+// };
 
-/*!
- * \brief Structure containing parsed turb dev options.
- */
-struct TURBDEV_ParsedOptions {
-  TURBDEV_OPTIONS boundary_condition = TURBDEV_OPTIONS::NONE;  /*!< \brief  model. */
-};
+// /*!
+//  * \brief Structure containing parsed turb dev options.
+//  */
+// struct TURBDEV_ParsedOptions {
+//   TURBDEV_OPTIONS boundary_condition = TURBDEV_OPTIONS::NONE;  /*!< \brief  model. */
+// };
 
-/*!
- * \brief Function to parse turb dev options.
- * \param[in] TURBDEV_Options - Selected turb dev option from config.
- * \param[in] nTURBDEV_Options - Number of options selected.
- * \param[in] rank - MPI rank.
- * \return Struct with turb dev options.
- */
-inline DUMMYTURB_ParsedOptions ParseTURBDEVOptions(const DUMMYTURB_OPTIONS *DUMMYTURB_Options, unsigned short nDUMMYTURB_Options, int rank) {
-  DUMMYTURB_ParsedOptions DUMMYTURBParsedOptions;
+// /*!
+//  * \brief Function to parse turb dev options.
+//  * \param[in] TURBDEV_Options - Selected turb dev option from config.
+//  * \param[in] nTURBDEV_Options - Number of options selected.
+//  * \param[in] rank - MPI rank.
+//  * \return Struct with turb dev options.
+//  */
+// inline DUMMYTURB_ParsedOptions ParseTURBDEVOptions(const DUMMYTURB_OPTIONS *DUMMYTURB_Options, unsigned short nDUMMYTURB_Options, int rank) {
+//   DUMMYTURB_ParsedOptions DUMMYTURBParsedOptions;
 
-  auto IsPresent = [&](DUMMYTURB_OPTIONS option) {
-    const auto DUMMYTURB_options_end = DUMMYTURB_Options + nDUMMYTURB_Options;
-    return std::find(DUMMYTURB_Options, DUMMYTURB_options_end, option) != DUMMYTURB_options_end;
-  };
+//   auto IsPresent = [&](DUMMYTURB_OPTIONS option) {
+//     const auto DUMMYTURB_options_end = DUMMYTURB_Options + nDUMMYTURB_Options;
+//     return std::find(DUMMYTURB_Options, DUMMYTURB_options_end, option) != DUMMYTURB_options_end;
+//   };
 
-  const bool found_BC_SA = IsPresent(DUMMYTURB_OPTIONS::BC_SA);
-  const bool found_BC_SST = IsPresent(DUMMYTURB_OPTIONS::BC_SST);
+//   const bool found_BC_SA = IsPresent(DUMMYTURB_OPTIONS::BC_SA);
+//   const bool found_BC_SST = IsPresent(DUMMYTURB_OPTIONS::BC_SST);
 
-  return DUMMYTURBParsedOptions;
-}
+//   return DUMMYTURBParsedOptions;
+// }
 
 
 /*!
