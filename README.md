@@ -49,17 +49,13 @@ Models and validation cases to be based on NASA Turbulence Model resources:
 ## Current Progress
 
 1 - Infraastructure for all 1, 2 and 3 equation models inputs (done)
+
 2 - Implementation of Wilcox k-Omega (in progress)
+
 3 - Setup of test cases (in progress)
+
 3 - Verification of Wilcox k-Omega (next)
 
-## Organisational
-
-1     Background work
-- 1.1   Code change to accept new models
-- 1.2   Implementation of dummy and development models 
-- 1.3   Validation cases 
-- 1.4   Automation of check cases 
 
 ## Details
 
