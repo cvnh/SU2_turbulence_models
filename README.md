@@ -46,6 +46,13 @@ Models and validation cases to be based on NASA Turbulence Model resources:
 
 <https://turbmodels.larc.nasa.gov/>
 
+## Current Progress
+
+1 - Infraastructure for all 1, 2 and 3 equation models inputs (done)
+2 - Implementation of Wilcox k-Omega (in progress)
+3 - Setup of test cases (in progress)
+3 - Verification of Wilcox k-Omega (next)
+
 ## Organisational
 
 1     Background work
